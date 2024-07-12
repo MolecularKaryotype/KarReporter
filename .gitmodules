@@ -1,0 +1,3 @@
+[submodule "KarUtils"]
+	path = KarUtils
+	url = https://github.com/MolecularKaryotype/KarUtils
