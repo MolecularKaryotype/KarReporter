@@ -5,7 +5,6 @@ import colorsys
 from PIL import Image
 import math
 
-# from KT_interpreter import *
 from KarUtils.utils import *
 from KarUtils.Structures import *
 
@@ -435,7 +434,7 @@ def indexed_segments_to_typed_segments(indexed_segment_list, index_to_segment_di
     return typed_segment_list
 
 
-def create_cytoband_path(cyto_file='Metadata/hg38_400_level_cytoband_updated.tsv'):
+def create_cytoband_path(cyto_file='KarUtils/Metadata/hg38_400_level_cytoband_updated.tsv'):
     segment_list = []
     with open(cyto_file) as fp_read:
         fp_read.readline()
