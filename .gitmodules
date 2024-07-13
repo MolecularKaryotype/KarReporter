@@ -1,3 +1,6 @@
 [submodule "KarUtils"]
 	path = KarUtils
 	url = https://github.com/MolecularKaryotype/KarUtils
+[submodule "KarInterpreter"]
+	path = KarInterpreter
+	url = https://github.com/MolecularKaryotype/KarInterpreter

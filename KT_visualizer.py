@@ -5,7 +5,7 @@ import colorsys
 from PIL import Image
 import math
 
-from KT_interpreter import *
+# from KT_interpreter import *
 from KarUtils.utils import *
 from KarUtils.Structures import *
 
@@ -783,19 +783,20 @@ def apply_scaling_to_vis(vis_entry, scaling_factor):
 
 
 if __name__ == '__main__':
-    omkar_file_path = '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/real_case_data/dremsek_OMKar_output_paths/39.txt'
-    mt_indexed_lists, mt_path_chrs, segment_to_index_dict, segment_size_dict = read_OMKar_to_indexed_list(omkar_file_path)
-    mt_path_chrs = [info.split(': ')[-1] for info in mt_path_chrs]
-    wt_path_dict = generate_wt_from_OMKar_output(segment_to_index_dict)
-    wt_indexed_lists = populate_wt_indexed_lists(mt_path_chrs, wt_path_dict)
-    events, aligned_haplotypes = interpret_haplotypes(mt_indexed_lists, wt_indexed_lists, mt_path_chrs, segment_size_dict)
+    # omkar_file_path = '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/real_case_data/dremsek_OMKar_output_paths/39.txt'
+    # mt_indexed_lists, mt_path_chrs, segment_to_index_dict, segment_size_dict = read_OMKar_to_indexed_list(omkar_file_path)
+    # mt_path_chrs = [info.split(': ')[-1] for info in mt_path_chrs]
+    # wt_path_dict = generate_wt_from_OMKar_output(segment_to_index_dict)
+    # wt_indexed_lists = populate_wt_indexed_lists(mt_path_chrs, wt_path_dict)
+    # events, aligned_haplotypes = interpret_haplotypes(mt_indexed_lists, wt_indexed_lists, mt_path_chrs, segment_size_dict)
+    #
+    # c_vis_input = generate_visualizer_input(events, aligned_haplotypes, segment_to_index_dict)
+    # vis_input_used = [c_vis_input[1], c_vis_input[3], c_vis_input[5], c_vis_input[5]]
+    # print(max_chr_length(vis_input_used))
+    # make_image([c_vis_input[1], c_vis_input[3], c_vis_input[5], c_vis_input[5]], max_chr_length(vis_input_used), 'test_new', IMG_LENGTH_SCALE_VERTICAL_SPLIT)
+    pass
 
-    c_vis_input = generate_visualizer_input(events, aligned_haplotypes, segment_to_index_dict)
-    vis_input_used = [c_vis_input[1], c_vis_input[3], c_vis_input[5], c_vis_input[5]]
-    print(max_chr_length(vis_input_used))
-    make_image([c_vis_input[1], c_vis_input[3], c_vis_input[5], c_vis_input[5]], max_chr_length(vis_input_used), 'test_new', IMG_LENGTH_SCALE_VERTICAL_SPLIT)
     # create_cytoband_path()
 
     # event<0>,type<balanced_translocation_unassociated>,blocks<['44.1.mt(44+).46+.47+', '45.0.wt(44+).p-ter.45+']>
 
-    

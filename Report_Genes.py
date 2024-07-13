@@ -70,6 +70,49 @@ def get_band_location(chrom, nt_idx, cyto_file='Metadata/cytoBand.txt'):
     raise RuntimeError('no band found')
 
 
+########################CODE ORIGINALLY IN INTERPRETER###########################
+def gather_breakpoints(breakpoints: []):
+    all_breakpoints = []
+    for c_breakpoint in breakpoints:
+        if c_breakpoint[1] is None:
+            continue
+        all_breakpoints.append((c_breakpoint[0], c_breakpoint[1]))
+    return all_breakpoints
+
+
+def get_genes_near_breakpoints(breakpoints: [(str, int)], proximity=50000):
+    breakpoint_ranges = []
+    for c_breakpoint in breakpoints:
+        breakpoint_ranges.append((c_breakpoint[0],
+                                  c_breakpoint[1] - proximity,
+                                  c_breakpoint[1] + proximity))
+    genes_in_regions = set()
+    for breakpoint_range in breakpoint_ranges:
+        genes_in_regions = genes_in_regions.union(get_genes_in_region(*breakpoint_range))
+    return list(genes_in_regions)
+
+
+def report_on_genes_based_on_breakpoints(breakpoints):
+    breakpoints = gather_breakpoints(breakpoints)
+    genes_near_bp = get_genes_near_breakpoints(breakpoints)
+    DDG_df = get_DDG_overlapped_genes(genes_near_bp)
+    DDG_gene_list, DDG_disease_list = tostring_gene_disease_omim(DDG_df)
+    return genes_near_bp, list(zip(DDG_gene_list, DDG_disease_list))
+
+
+def report_cnv_genes_on_region(chrom, start, end, proximity=50000):
+    if start > end:
+        temp = start
+        start = end
+        end = temp
+    start = max(0, start - proximity)
+    end = end + proximity
+    genes = get_genes_in_region('chr' + chrom, start, end)
+    DDG_df = get_DDG_overlapped_genes(genes)
+    DDG_gene_list, DDG_disease_list = tostring_gene_disease_omim(DDG_df)
+    return genes, list(zip(DDG_gene_list, DDG_disease_list))
+
+
 def test_get_genes():
     genes = get_genes_in_region('Chr22', 25200725, 25560371)
     print(genes)

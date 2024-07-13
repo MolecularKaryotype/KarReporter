@@ -1,8 +1,11 @@
-from KT_visualizer import *
 from jinja2 import Environment, FileSystemLoader
 import os
 import base64
 import re
+
+from KarInterpreter import *
+from format_report import *
+from KarUtils import *
 
 def image_to_base64(image_path):
     try:
@@ -15,120 +18,6 @@ def image_to_base64(image_path):
 
 def int_file_keys(filename):
     return int(filename.split('_')[0])
-
-
-def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, compile_image=False, debug=False, skip=None):
-    headers = []
-    cases_with_events = []
-    image_paths = []
-    iscn_reports = []
-    genes_reports = []
-    debug_outputs = []  # list of dicts [{'segs': [], 'mt_haps': [], 'wt_haps': []}]
-    files = [file for file in os.listdir(omkar_output_dir)]
-    # files = sorted(files, key=int_file_keys)
-    for file in files:
-        if file_of_interest is not None:
-            if file.split('.')[0] not in file_of_interest:
-                continue
-        if skip is not None:
-            if file.split('.')[0] in skip:
-                continue
-        filename = file.split('.')[0]
-        file_path = omkar_output_dir + file
-        print(file)
-        mt_indexed_lists, mt_path_chrs, segment_to_index_dict, segment_size_dict = read_OMKar_to_indexed_list(file_path, forbidden_region_file)
-        index_to_segment_dict = reverse_dict(segment_to_index_dict)
-        mt_path_chrs = [info.split(': ')[-1] for info in mt_path_chrs]
-        wt_path_dict = generate_wt_from_OMKar_output(segment_to_index_dict)
-        wt_indexed_lists = populate_wt_indexed_lists(mt_path_chrs, wt_path_dict)
-        events, aligned_haplotypes = interpret_haplotypes(mt_indexed_lists, wt_indexed_lists, mt_path_chrs, segment_size_dict)
-        if len(events) == 0:
-            continue
-        else:
-            cases_with_events.append(filename)
-        dependent_clusters, cluster_events = form_dependent_clusters(events, aligned_haplotypes, index_to_segment_dict)
-        print(dependent_clusters)
-        ## iterate over all clusters
-        n_clusters = len(dependent_clusters)
-        for image_cluster_idx, (c_cluster, c_events) in enumerate(zip(dependent_clusters, cluster_events)):
-            # to remove all later file names, check cluster_idx != 0
-            headers.append('{}: cluster {} (out of {})'.format(filename, image_cluster_idx + 1, n_clusters))
-            ## include all homologues
-            event_chr = set()
-            for cluster_idx in c_cluster:
-                event_chr.add(aligned_haplotypes[cluster_idx].chrom)
-            hap_idx_to_plot = []
-            for hap_idx, hap in enumerate(aligned_haplotypes):
-                if hap.chrom in event_chr:
-                    hap_idx_to_plot.append(hap_idx)
-
-            c_aligned_haplotypes = [aligned_haplotypes[i] for i in hap_idx_to_plot]
-
-            ## generate report text
-            c_events = sort_events(c_events)
-            iscn_events, genes_report = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
-            ## generate image
-            c_vis_input = generate_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
-
-            def vis_key(input_vis):
-                chr_val = input_vis['chr'][3:]
-                if chr_val == "X":
-                    return_val = 23.0
-                elif chr_val == "Y":
-                    return_val = 24.0
-                else:
-                    return_val = float(chr_val)
-                if input_vis['highlight']:
-                    return_val += 0.5  # highlight always later
-                return return_val
-
-            c_vis_input = sorted(c_vis_input, key=vis_key)
-            image_prefix = "{}/{}_imagecluster{}".format(image_dir, filename, image_cluster_idx)
-            image_path = image_prefix + '_rotated.png'
-            relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]
-            if compile_image:
-                if len(c_vis_input) <= 4:
-                    make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_VERTICAL_SPLIT)
-                else:
-                    make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_HORIZONTAL_SPLIT)
-
-            image_paths.append(relative_image_path)
-            iscn_reports.append(iscn_events)
-            genes_reports.append(genes_report)
-
-            ## generate debug output
-            debug_segs = set()
-            debug_mt_haps = []
-            debug_wt_haps = []
-            debug_hap_ids = []
-            debug_mt_aligned = []
-            debug_wt_aligned = []
-            for aligned_haplotype in c_aligned_haplotypes:
-                unique_segs = aligned_haplotype.unique_segment_indices()
-                for seg in unique_segs:
-                    seg_object = index_to_segment_dict[int(seg)]
-                    debug_segs.add((seg, seg_object.chr_name, f"{seg_object.start:,}", f"{seg_object.end:,}", f"{len(seg_object):,}"))
-            debug_segs = list(debug_segs)
-            debug_segs = sorted(debug_segs, key=lambda x: int(x[0]))
-
-            for c_vis in c_vis_input:
-                debug_hap_ids.append(c_vis['hap_id'])
-                # find the correct aligned_haplotype for mt/wt
-                hap_found = False
-                for aligned_haplotype in aligned_haplotypes:
-                    if aligned_haplotype.id == c_vis['hap_id']:
-                        debug_mt_haps.append(aligned_haplotype.mt_hap)
-                        debug_wt_haps.append(aligned_haplotype.wt_hap)
-                        debug_mt_aligned.append(aligned_haplotype.mt_aligned)
-                        debug_wt_aligned.append(aligned_haplotype.wt_aligned)
-                        hap_found = True
-                        break
-                if not hap_found:
-                    raise RuntimeError('hap not found')
-            debug_outputs.append({'segs': debug_segs, 'mt_haps': debug_mt_haps, 'wt_haps': debug_wt_haps, 'IDs': debug_hap_ids,
-                                  'mt_aligned': debug_mt_aligned, 'wt_aligned': debug_wt_aligned})
-
-    return headers, cases_with_events, image_paths, iscn_reports, genes_reports, debug_outputs
 
 
 def html_hyperlink_coordinates(input_str, proximity=50000):
