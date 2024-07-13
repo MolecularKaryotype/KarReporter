@@ -15,6 +15,7 @@ containing
 **KT_interpreter_html_report.py** and **template.html**
 - for HTML formatting
 - most work needed are within these two files
+- test run code is written in `KT_interpreter_html_report.py` and should work when ran directly
 
 **generate_content.py**
 - upstream for HTML formatting
