@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div>
+    <h2 style="text-align:center">{{title}}</h2>
+</div>
+<div id="report_page_top" style="text-align:center"></div>
+<div id="report">
+{% for header, image, iscn, gene_report, debug in content %}
+    <div class="container" id="{{ loop.index }}">
+    <h3>{{header}}</h3>
+    <div class="iscn">
+        {% for sv in iscn %}
+        <p><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p>
+        {% endfor %}   
+    </div>
+    {% if gene_report %}
+    <div class="table-container">
+    <table id="gene_report" class="table table-striped table-hover cell-border  gene_report">
+        <thead>
+            <tr>
+                {% for col_name in columns_order %}
+                <th>{{ col_name }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in gene_report %}
+            <tr>
+                {% for col_name in columns_order %}
+                <td>{{ row[col_name] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% endif %}
+    <div class="segment-table-container">
+        <table id="segment" class="table table-striped table-hover cell-border  segment">
+            <thead>
+                <tr>
+                    <th>seg index</th>
+                    <th>chr</th>
+                    <th>start</th>
+                    <th>end</th>
+                    <th>size</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for seg in debug.segs %}
+                <tr>
+                    <td>{{ seg[0] }}</td>
+                    <td>{{ seg[1] }}</td>
+                    <td>{{ seg[2] }}</td>
+                    <td>{{ seg[3] }}</td>
+                    <td>{{ seg[4] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <!-- <table id="report-table" style="width: 100%; max-width: 1200px; margin: auto; border-collapse: collapse;">
+        <thead>
+            <tr>
+                
+                <th style="border: 1px solid #ddd; padding: 8px;">Image</th>                                      
+                <th style="border: 1px solid #ddd; padding: 8px;">Debug</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            
+            <td style="border: 1px solid #ddd; padding: 8px;">{{image}}</td>                             
+            <td style="border: 1px solid #ddd; padding: 8px;">{{debug}}</td>
+        </tr>
+       
+        </tbody>
+    </table> -->
+   
+</div>
+</div>
+{% endfor %}
+{% endblock content %}
+
+{% block onreadyBlock %}
+<script>
+    $(document).ready( function () {
+        $(".container").hide()
+        var result = [];
+        for(var i = 1; i <= 9; i++){
+            result.push($("#"+i));
+        }
+        var container = $('#report_page_top').pagination({
+            pageSize: 1,
+            totalNumber: 9,
+            showPageNumbers: false,
+        dataSource: result,
+        callback: function(data, pagination) {
+            $(".container").hide()
+            data[0].show()
+        }});
+        
+    })
+  </script>
+{% endblock onreadyBlock %}
