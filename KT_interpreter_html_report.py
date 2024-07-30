@@ -1,6 +1,7 @@
 from jinja2 import Environment, FileSystemLoader
 import base64
-
+import os
+import shutil
 from generate_content import *
 from KarUtils import *
 
@@ -63,7 +64,7 @@ def hyperlink_iscn_interpretation(input_str):
     return input_str
 
 
-def generate_html_report(compile_image, cases_of_interest, title, data_dir, image_output_dir, output_file, debug=False, skip=None):
+def generate_html_report(compile_image, cases_of_interest, title, data_dir, image_output_dir, output_dir, debug=False, skip=None):
     """
 
     @param compile_image: bool, whether the images were already compiled/not needing update
@@ -71,7 +72,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     @param title: title of the report
     @param data_dir:
     @param image_output_dir: where to store the image
-    @param output_file: path to the output file
+    @param output_dir: path to the output files
     @param debug: bool, whether to include debug info in the report
     @param skip: list, cases to skip
     @return: N/a
@@ -107,17 +108,20 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     newrendered_html = newtemplate.render(title=title, content=dashboard, columns_order=columns_order, debug=debug)
 
     #create output folder if it does not exist
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
-    ###
 
     #Copy the static folder into output folder and overwrite
+    shutil.copytree("bootstrap/static", output_dir+"/static")
+
 
     ###
 
-    with open("output/dashboard.html", 'w') as f:
+    with open(output_dir+"/"+"dashboard.html", 'w') as f:
         f.write(newrendered_html)
 
-    with open(output_file, 'w') as f:
+    with open(output_dir+"/oldreport.html", 'w') as f:
         f.write(rendered_html)
 
     start = 0
@@ -125,7 +129,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     reporttemplate = env1.get_template('report.html')
     for cluster in clusters:
         filtered_headers = headers[start:start+cluster]
-        filtered_images = image_paths[start:start+cluster]
+        filtered_images = images_base64[start:start+cluster]
         filtered_iscn = iscn_reports[start:start+cluster]
         filtered_gene_reports = formatted_genes_reports[start:start+cluster]
         filtered_debug = debug_outputs[start:start+cluster]
@@ -136,11 +140,11 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         filtered_content =  [(header, image, iscn, gene_report, debug) for header, image, iscn, gene_report, debug in
                zip(filtered_headers, filtered_images, filtered_iscn, filtered_gene_reports, filtered_debug)]
         filtered_report = reporttemplate.render(title=report_title, content = filtered_content, columns_order=columns_order)
-        with open("output/"+report_title+".html", 'w') as f:
+        with open(output_dir+"/"+report_title+".html", 'w') as f:
             f.write(filtered_report)
     
 
-    print(f"HTML file generated: {os.path.abspath(output_file)}")
+    print(f"HTML file generated")
 
 
 def manual_test():
@@ -191,5 +195,5 @@ def manual_test():
 
 if __name__ == "__main__":
     forbidden_region_file = "KarUtils/Metadata/acrocentric_telo_cen.bed"
-    i_title, i_omkar_output_dir, i_image_output_dir, i_output_file = 'example_run', 'example_input/', 'example_output/plots/', 'example_output/report.html'
-    generate_html_report(True, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_file, debug=True)
+    i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'example_run', 'example_input/', 'output/plots/', 'output'
+    generate_html_report(True, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=True)
