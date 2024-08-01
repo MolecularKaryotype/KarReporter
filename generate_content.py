@@ -319,6 +319,8 @@ def chr_range_tostr(bpa, bpb, bpa_band, bpb_band):
 
 def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=None, compile_image=False, debug=False, skip=None, forbidden_region_file='KarUtils/Metadata/acrocentric_telo_cen.bed'):
     headers = []
+    filenames = []
+    clusters = []
     cases_with_events = []
     image_paths = []
     iscn_reports = []
@@ -334,6 +336,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             if file.split('.')[0] in skip:
                 continue
         filename = file.split('.')[0]
+        filenames.append(filename)
         file_path = omkar_output_dir + file
         print(file)
         mt_indexed_lists, mt_path_chrs, segment_to_index_dict, segment_size_dict = read_OMKar_to_indexed_list(file_path, forbidden_region_file)
@@ -350,8 +353,10 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
         print(dependent_clusters)
         ## iterate over all clusters
         n_clusters = len(dependent_clusters)
+        clusters.append(n_clusters)
         for image_cluster_idx, (c_cluster, c_events) in enumerate(zip(dependent_clusters, cluster_events)):
             # to remove all later file names, check cluster_idx != 0
+            
             headers.append('{}: cluster {} (out of {})'.format(filename, image_cluster_idx + 1, n_clusters))
             ## include all homologues
             event_chr = set()
@@ -428,7 +433,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             debug_outputs.append({'segs': debug_segs, 'mt_haps': debug_mt_haps, 'wt_haps': debug_wt_haps, 'IDs': debug_hap_ids,
                                   'mt_aligned': debug_mt_aligned, 'wt_aligned': debug_wt_aligned})
 
-    return headers, cases_with_events, image_paths, iscn_reports, genes_reports, debug_outputs
+    return filenames, clusters, headers, cases_with_events, image_paths, iscn_reports, genes_reports, debug_outputs
 
 
 
