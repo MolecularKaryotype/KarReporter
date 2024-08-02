@@ -199,8 +199,8 @@ def batch_generate_latex_case_str(omkar_output_dir, image_dir, compile_image=Fal
     final_str += "\n"
     final_str += "\\end{document}\n"
 
-    #         image_path = "{}/{}".format(image_dir, str(filename).zfill(3) + image_suffix)
-    #         # image_path = "{}/{}".format(image_dir, str(filename) + image_suffix)
+    #         image_path = "{}/{}".format(dremsek_images, str(filename).zfill(3) + image_suffix)
+    #         # image_path = "{}/{}".format(dremsek_images, str(filename) + image_suffix)
     #
     #         ## insert image
     #         if os.path.exists('latex_reports/' + image_path):
@@ -330,10 +330,10 @@ if __name__ == "__main__":
     # test_interpreter()
     # test_segs_union()
     # test_reciprocal_trans()
-    # c_output_name, data_dir, image_dir = 'Dremsek', 'real_case_data/dremsek_OMKar_output_paths/', 'latex_reports/paul_dremsek_plots_new/'
-    # c_output_name, data_dir, image_dir = 'Keyhole', 'real_case_data/keyhole_OMKar_output_paths/', 'latex_reports/keyhole_plots_new/'
-    # c_output_name, data_dir, image_dir = 'Sunnyside', 'real_case_data/sunnyside_OMKar_output_paths/', 'latex_reports/sunnyside_plots_new/'
+    # c_output_name, data_dir, dremsek_images = 'Dremsek', 'real_case_data/dremsek_OMKar_output_paths/', 'latex_reports/paul_dremsek_plots_new/'
+    # c_output_name, data_dir, dremsek_images = 'Keyhole', 'real_case_data/keyhole_OMKar_output_paths/', 'latex_reports/keyhole_plots_new/'
+    # c_output_name, data_dir, dremsek_images = 'Sunnyside', 'real_case_data/sunnyside_OMKar_output_paths/', 'latex_reports/sunnyside_plots_new/'
     c_output_name, data_dir, image_dir = 'ACC_Simulation', 'omkar_analyses_pipeline/builds/b14/omkar_paths/', 'latex_reports/ACC_simulation_plots/'
-    # batch_case_str = batch_generate_latex_case_str(data_dir, image_dir)
+    # batch_case_str = batch_generate_latex_case_str(data_dir, dremsek_images)
     os.makedirs(image_dir, exist_ok=True)
     test_latex(c_output_name, compile_image=True)
