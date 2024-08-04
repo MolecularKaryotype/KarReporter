@@ -17,6 +17,14 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
     """
     iscn_events = []
     gene_reports = []
+    event_type_reports = {
+        "deletion" :0,
+        "inversion":0,
+        "tandem_duplication":0,
+        "left_duplication_inversion":0,
+        "right_duplication_inversion":0,
+        "insertion":0
+    }
     associated_event_already_reported = []
     for event in interpreted_events:
         event_id = event[0]
@@ -89,6 +97,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 bp4_band = 'qter'
 
             if event_type == 'deletion':
+                event_type_reports['deletion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'del({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -99,6 +108,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = -1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'inversion':
+                event_type_reports['inversion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'inv({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -107,6 +117,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 iscn_interpretation = 'inversion on Chr{}: {}'.format(path_chr, chr_range)
                 bp_genes, bp_genes_highlight = report_on_genes_based_on_breakpoints([(bp1_chr, bp1), (bp2_chr, bp2), (bp3_chr, bp3), (bp4_chr, bp4)])
             elif event_type == 'tandem_duplication':
+                event_type_reports['tandem_duplication'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'dup({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -117,6 +128,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = 1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'left_duplication_inversion':
+                event_type_reports['left_duplication_inversion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'left-dup-inv({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -127,6 +139,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = 1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'right_duplication_inversion':
+                event_type_reports['right_duplication_inversion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'right-dup-inv({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -137,6 +150,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = 1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'insertion':
+                event_type_reports['insertion'] += 1
                 # different report format if insertion is from different chr
                 if 'Chr' + path_chr == bp2_chr:
                     # TODO: check ISCN syntax if bp2_band == bp3_band
@@ -310,7 +324,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                              'cnv_genes_highlight': cn_changed_genes_highlight})
     if len(iscn_events) != len(gene_reports):
         raise RuntimeError('unmatched reports')
-    return iscn_events, gene_reports
+    return iscn_events, gene_reports, event_type_reports
 
 
 def chr_range_tostr(bpa, bpb, bpa_band, bpb_band):
@@ -325,10 +339,12 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
     image_paths = []
     iscn_reports = []
     genes_reports = []
+    case_event_type_reports = []
     debug_outputs = []  # list of dicts [{'segs': [], 'mt_haps': [], 'wt_haps': []}]
     files = [file for file in os.listdir(omkar_output_dir)]
     # files = sorted(files, key=int_file_keys)
     for file in files:
+        file_event_type_reports = []
         if file_of_interest is not None:
             if file.split('.')[0] not in file_of_interest:
                 continue
@@ -371,7 +387,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
 
             ## generate report text
             c_events = sort_events(c_events)
-            iscn_events, genes_report = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
+            iscn_events, genes_report, event_type_reports = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
             ## generate image
             c_vis_input = generate_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
 
@@ -400,6 +416,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             image_paths.append(relative_image_path)
             iscn_reports.append(iscn_events)
             genes_reports.append(genes_report)
+            file_event_type_reports.append(event_type_reports)
 
             ## generate debug output
             debug_segs = set()
@@ -433,9 +450,28 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             debug_outputs.append({'segs': debug_segs, 'mt_haps': debug_mt_haps, 'wt_haps': debug_wt_haps, 'IDs': debug_hap_ids,
                                   'mt_aligned': debug_mt_aligned, 'wt_aligned': debug_wt_aligned})
 
-    return filenames, clusters, headers, cases_with_events, image_paths, iscn_reports, genes_reports, debug_outputs
+        #TODO Process the file dictionary  and add all the numbers for each event type and create a new dictionary
+        #Add the new dictionary into the case_event_type_reports
+        case_event_type_reports.append(combine_dictionaries(file_event_type_reports))
+        
+    return filenames, clusters, headers, cases_with_events, image_paths, iscn_reports, genes_reports, case_event_type_reports, debug_outputs
 
-
+def combine_dictionaries(dict_list):
+    # Initialize an empty dictionary to hold the combined results
+    combined_dict = {}
+    
+    # Iterate through each dictionary in the list
+    for d in dict_list:
+        # Iterate through each key-value pair in the current dictionary
+        for key, value in d.items():
+            # If the key is not already in the combined dictionary, add it with the current value
+            if key not in combined_dict:
+                combined_dict[key] = value
+            # If the key is already in the combined dictionary, add the current value to the existing value
+            else:
+                combined_dict[key] += value
+    
+    return combined_dict
 
 def get_ucsc_url(chrom, start_pos, end_pos, db='hg38'):
     prefix = 'https://genome.ucsc.edu/cgi-bin/hgTracks?db={}' \

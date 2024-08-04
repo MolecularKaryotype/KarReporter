@@ -80,7 +80,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     os.makedirs(image_output_dir, exist_ok=True)
 
     # one tuple per cluster (event)
-    filenames, clusters, headers, cases_with_events, image_paths, iscn_reports, genes_reports, debug_outputs = batch_populate_html_contents(data_dir, image_output_dir,
+    filenames, clusters, headers, cases_with_events, image_paths, iscn_reports, genes_reports, case_event_type_reports, debug_outputs = batch_populate_html_contents(data_dir, image_output_dir,
                                                                                                                        file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
     images_base64 = [image_to_base64(img) for img in image_paths]
 
@@ -93,8 +93,9 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
             hyperlinked_sv_interpretation = hyperlink_iscn_interpretation(sv_interpretation)
             iscn_report[iscn_report_idx][1] = hyperlinked_sv_interpretation
 
-    dashboard = [(filename, cluster) for filename, cluster in
-               zip(filenames, clusters)]
+   
+    dashboard = [(filename, cluster, case_event_type_reports) for filename, cluster, case_event_type_reports in
+               zip(filenames, clusters, case_event_type_reports)]
 
     content = [(header, text, image, table_content, debug) for header, text, image, table_content, debug in
                zip(headers, iscn_reports, images_base64, formatted_genes_reports, debug_outputs)]
