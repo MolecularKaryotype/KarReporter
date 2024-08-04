@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block title %}
+    - {{title}}
+{% endblock %}
+
 {% block content %}
 
 <div>
@@ -13,9 +17,11 @@
             <div class="col-md-9">
                 <h3>{{header}}</h3>
                 <div class="iscn section-buffer">
-                    {% for sv in iscn %}
-                    <p><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p>
-                    {% endfor %}
+                    <ul class="list-group">
+                        {% for sv in iscn %}
+                        <li class="list-group-item"><p><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p></li>
+                        {% endfor %}
+                      </ul>
                 </div>
                 {% if gene_report %}
                 <div class="table-container  section-buffer">
@@ -39,8 +45,8 @@
                     </table>
                 </div>
                 {%else%}
-                <div class="table-container  section-buffer">
-                    <h3>There are no genes of interest.</h3>
+                <div class="alert alert-warning" role="alert">
+                    There are no genes of interest.
                 </div>
                 {% endif %}
                 <div class="segment-table-container  section-buffer">
@@ -66,6 +72,66 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+                <div>
+                    <div class="accordion segment-table-container  section-buffer" id="mt_gaps">
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                            mt_gaps
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for mt_hap in debug.mt_haps %}
+                                        <li class="list-group-item"><p>{{ debug.IDs[loop.index - 1] }}: {{ mt_hap }}</p></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% if debug %}
+                    <div class="accordion segment-table-container  section-buffer" id="wt_gaps">
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
+                            wt_gaps
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for wt_hap in debug.wt_haps %}
+                                        <li class="list-group-item"><p>{{ wt_hap }}</p></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="accordion segment-table-container  section-buffer" id="alignment">
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseThree">
+                            alignments
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for mt_aligned in debug.mt_aligned %}
+                                        <li class="list-group-item"><p>{{ mt_aligned }} {{ debug.wt_aligned[loop.index - 1] }}</p></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             <div class="col-md-3">
