@@ -153,8 +153,9 @@
         }
         var container = $('#report_page_top').pagination({
             pageSize: 1,
+            pageRange: null,
             totalNumber: {{content|length}},
-            showPageNumbers: false,
+            showPageNumbers: true,
             dataSource: result,
             callback: function (data, pagination) {
                 $(".container1").hide()
