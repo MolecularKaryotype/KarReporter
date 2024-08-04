@@ -109,13 +109,9 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
 
     #create output folder if it does not exist
     if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-
-    #Copy the static folder into output folder and overwrite
-    shutil.copytree("bootstrap/static", output_dir+"/static")
-
-
+        os.makedirs(output_dir,exist_ok=True)
+        #Copy the static folder into output folder and overwrite
+    shutil.copytree("bootstrap/static", output_dir+"/static", dirs_exist_ok=True)
     ###
 
     with open(output_dir+"/"+"dashboard.html", 'w') as f:
