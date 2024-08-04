@@ -191,5 +191,5 @@ def manual_test():
 
 if __name__ == "__main__":
     forbidden_region_file = "KarUtils/Metadata/acrocentric_telo_cen.bed"
-    i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'example_run', 'example_input/', 'output/plots/', 'output'
+    i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'example_run', 'example_input/b17_karsim/', 'output/plots/', 'output'
     generate_html_report(True, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=True)
