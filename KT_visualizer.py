@@ -719,7 +719,7 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
         col = chrom_idx % 4
         plot_chromosome(i_ax, i_chromosome_data, Y_INIT + col * Y_CONST, row * 28, chr_len_scaling)
 
-    plt.savefig(output_prefix + '.png', bbox_inches='tight')
+    plt.savefig(output_prefix + '.png', bbox_inches='tight', dpi=300, transparent=True)
     plt.close()
     rotate_image(output_prefix + '.png', output_prefix + '_rotated.png')
 
