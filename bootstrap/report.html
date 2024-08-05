@@ -1,29 +1,35 @@
 {% extends "base.html" %}
 
+{% block title %}
+    - {{title}}
+{% endblock %}
+
 {% block content %}
 
 <div>
     <h2 style="text-align:center">{{title}}</h2>
 </div>
 <div id="report_page_top" style="text-align:center"></div>
-<div id="report">
+<div id="report" class="col-lg-12">
     {% for header, image, iscn, gene_report, debug in content %}
-    <div class="container" id="{{ loop.index }}">
+    <div class="container1" id="{{ loop.index }}">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-9">
                 <h3>{{header}}</h3>
                 <div class="iscn section-buffer">
-                    {% for sv in iscn %}
-                    <p><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p>
-                    {% endfor %}
+                    <ul class="list-group">
+                        {% for sv in iscn %}
+                        <li class="list-group-item"><p><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p></li>
+                        {% endfor %}
+                      </ul>
                 </div>
                 {% if gene_report %}
                 <div class="table-container  section-buffer">
-                    <table id="gene_report" class="table table-striped table-hover cell-border  gene_report">
+                    <table id="gene_report" class="table table-bordered table-striped table-hover cell-border compact stripe gene_report">
                         <thead>
                             <tr>
                                 {% for col_name in columns_order %}
-                                <th>{{ col_name }}</th>
+                                <th class="dt-head{% if not loop.first %}-right{%else%}-left{% endif %} ">{{ col_name }}</th>
                                 {% endfor %}
                             </tr>
                         </thead>
@@ -31,63 +37,128 @@
                             {% for row in gene_report %}
                             <tr>
                                 {% for col_name in columns_order %}
-                                <td>{{ row[col_name] }}</td>
+                                <td class="dt-body{% if not loop.first %}-right{%else%}-left{% endif %} ">{{ row[col_name] }}</td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                {%else%}
+                <div class="alert alert-warning" role="alert">
+                    There are no genes of interest.
+                </div>
                 {% endif %}
                 <div class="segment-table-container  section-buffer">
-                    <table id="segment" class="table table-striped table-hover cell-border  segment">
+                    <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment">
                         <thead>
                             <tr>
-                                <th>seg index</th>
-                                <th>chr</th>
-                                <th>start</th>
-                                <th>end</th>
-                                <th>size</th>
+                                <th class="dt-head-left">Segment</th>
+                                <th class="dt-head-right">chr</th>
+                                <th class="dt-head-right">start</th>
+                                <th class="dt-head-right">end</th>
+                                <th class="dt-head-right">size</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for seg in debug.segs %}
                             <tr>
-                                <td>{{ seg[0] }}</td>
-                                <td>{{ seg[1] }}</td>
-                                <td>{{ seg[2] }}</td>
-                                <td>{{ seg[3] }}</td>
-                                <td>{{ seg[4] }}</td>
+                                <td class="dt-body-left">{{ seg[0] }}</td>
+                                <td class="dt-body-right">{{ seg[1] }}</td>
+                                <td class="dt-body-right">{{ seg[2] }}</td>
+                                <td class="dt-body-right">{{ seg[3] }}</td>
+                                <td class="dt-body-right">{{ seg[4] }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <div>
+                    <div class="accordion segment-table-container  section-buffer" id="mt_gaps">
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                            mt_gaps
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for mt_hap in debug.mt_haps %}
+                                        <li class="list-group-item"><p>{{ debug.IDs[loop.index - 1] }}: {{ mt_hap }}</p></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% if debug %}
+                    <div class="accordion segment-table-container  section-buffer" id="wt_gaps">
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
+                            wt_gaps
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for wt_hap in debug.wt_haps %}
+                                        <li class="list-group-item"><p>{{ wt_hap }}</p></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="accordion segment-table-container  section-buffer" id="alignment">
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseThree">
+                            alignments
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for mt_aligned in debug.mt_aligned %}
+                                        <li class="list-group-item"><p>{{ mt_aligned }} {{ debug.wt_aligned[loop.index - 1] }}</p></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-            <div class="col-md-4 ">
+            <div class="col-md-3">
                 <img src="data:image/png;base64,{{ image }}" alt="Image" class="img-fluid">
             </div>
         </div>
     </div>
-</div>
 {% endfor %}
+</div>
 {% endblock content %}
 
 {% block onreadyBlock %}
 <script>
     $(document).ready(function () {
-        $(".container").hide()
+        $(".container1").hide()
         var result = [];
-        for (var i = 1; i <= 9; i++) {
+        for (var i = 1; i <= {{content|length}}; i++) {
             result.push($("#" + i));
         }
         var container = $('#report_page_top').pagination({
             pageSize: 1,
-            totalNumber: 9,
-            showPageNumbers: false,
+            pageRange: null,
+            totalNumber: {{content|length}},
+            showPageNumbers: true,
             dataSource: result,
             callback: function (data, pagination) {
-                $(".container").hide()
+                $(".container1").hide()
                 data[0].show()
             }
         });
