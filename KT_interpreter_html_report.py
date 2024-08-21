@@ -40,7 +40,7 @@ def html_hyperlink_coordinates(input_str, proximity=50000):
         start_pos = int(match.group(2).replace(',', ''))
         end_pos = int(match.group(3).replace(',', ''))
         ucsc_url = get_ucsc_url('chr' + match.group(1), start_pos, end_pos)
-        hyperlinked_str = f'<a href="{ucsc_url}">{replacement_str}</a>'
+        hyperlinked_str = f'<a href="{ucsc_url}" target="_blank">{replacement_str}</a>'
         return_dict[replacement_str] = hyperlinked_str
 
     pattern = r'Chr(\d+): (\d{1,3}(?:,\d{3})*) \(.*?\)'
@@ -80,12 +80,13 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     os.makedirs(image_output_dir, exist_ok=True)
 
     # one tuple per cluster (event)
-    filenames, clusters, headers, cases_with_events, image_paths, iscn_reports, genes_reports, case_event_type_reports, debug_outputs = batch_populate_html_contents(data_dir, image_output_dir,
+    filenames, clusters, headers, cases_with_events, image1_paths, image2_paths, iscn_reports, genes_reports, case_event_type_reports, case_complexities, debug_outputs = batch_populate_html_contents(data_dir, image_output_dir,
                                                                                                                        file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
-    images_base64 = [image_to_base64(img) for img in image_paths]
+    images1_base64 = [image_to_base64(img) for img in image1_paths]
+    images2_base64 = [image_to_base64(img) for img in image2_paths]
 
     formatted_genes_reports = [format_genes_report(genes_report) for genes_report in genes_reports]
-    columns_order = ['SV', 'rationale', 'gene name', 'gene omim']
+    columns_order = ['SV', 'gene name', 'gene omim', 'rationale']
 
     ## hyperlinking
     for iscn_report in iscn_reports:
@@ -93,17 +94,15 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
             hyperlinked_sv_interpretation = hyperlink_iscn_interpretation(sv_interpretation)
             iscn_report[iscn_report_idx][1] = hyperlinked_sv_interpretation
 
-   
-    dashboard = [(filename, cluster, case_event_type_reports) for filename, cluster, case_event_type_reports in
-               zip(filenames, clusters, case_event_type_reports)]
-
-    content = [(header, text, image, table_content, debug) for header, text, image, table_content, debug in
-               zip(headers, iscn_reports, images_base64, formatted_genes_reports, debug_outputs)]
-
+    # for old report
+    content = [(header, text, image, table_content, debug_info) for header, text, image, table_content, debug_info in
+               zip(headers, iscn_reports, images1_base64, formatted_genes_reports, debug_outputs)]
     env = Environment(loader=FileSystemLoader('./'))
     template = env.get_template('template.html')
     rendered_html = template.render(title=title, content=content, columns_order=columns_order, debug=debug)
 
+    dashboard = [(filename, cluster, case_event_type_report, case_complexity) for filename, cluster, case_event_type_report, case_complexity in
+               zip(filenames, clusters, case_event_type_reports, case_complexities)]
     env1 = Environment(loader=FileSystemLoader('./bootstrap'))
     newtemplate = env1.get_template('dashboard.html')
     newrendered_html = newtemplate.render(title=title, content=dashboard, columns_order=columns_order, debug=debug)
@@ -126,7 +125,8 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     reporttemplate = env1.get_template('report.html')
     for cluster in clusters:
         filtered_headers = headers[start:start+cluster]
-        filtered_images = images_base64[start:start+cluster]
+        filtered_images1 = images1_base64[start:start+cluster]
+        filtered_images2 = images2_base64[start:start+cluster]
         filtered_iscn = iscn_reports[start:start+cluster]
         filtered_gene_reports = formatted_genes_reports[start:start+cluster]
         filtered_debug = debug_outputs[start:start+cluster]
@@ -134,12 +134,11 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         report_title = filenames[index]
         index+=1
         
-        filtered_content =  [(header, image, iscn, gene_report, debug) for header, image, iscn, gene_report, debug in
-               zip(filtered_headers, filtered_images, filtered_iscn, filtered_gene_reports, filtered_debug)]
-        filtered_report = reporttemplate.render(title=report_title, content = filtered_content, columns_order=columns_order)
+        filtered_content = [(header, image1, image2, iscn, gene_report, debug_info) for header, image1, image2, iscn, gene_report, debug_info in
+               zip(filtered_headers, filtered_images1, filtered_images2, filtered_iscn, filtered_gene_reports, filtered_debug)]
+        filtered_report = reporttemplate.render(title=report_title, content=filtered_content, columns_order=columns_order, debug=debug)
         with open(output_dir+"/"+report_title+".html", 'w') as f:
             f.write(filtered_report)
-    
 
     print(f"HTML file generated")
 

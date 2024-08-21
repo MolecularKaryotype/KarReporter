@@ -3,49 +3,103 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
+  <component name="BookmarksViewState">
+    <option name="rewriteBookmarkType" value="true" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="285f2f54-1f6a-4853-85ee-05edfa06ef42" name="Changes" comment="updated readme">
+      <change afterPath="$PROJECT_DIR$/example_input/subset_test/23X_15q26_overgrowth_r1.1.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/example_input/subset_test/23X_1q21_recurrent_microduplication_r1.1.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/KarReporter.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/KarReporter.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/KT_interpreter_html_report.py" beforeDir="false" afterPath="$PROJECT_DIR$/KT_interpreter_html_report.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/KT_visualizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/KT_visualizer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/KarUtils" beforeDir="false" afterPath="$PROJECT_DIR$/KarUtils" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/KarUtils/read_OMKar_output.py" beforeDir="false" afterPath="$PROJECT_DIR$/KarUtils/read_OMKar_output.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/archive/KT_interpreter_latex_report.py" beforeDir="false" afterPath="$PROJECT_DIR$/archive/KT_interpreter_latex_report.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/bootstrap/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/report.html" beforeDir="false" afterPath="$PROJECT_DIR$/bootstrap/report.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/css/karreporter.css" beforeDir="false" afterPath="$PROJECT_DIR$/bootstrap/static/assets/css/karreporter.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/generate_content.py" beforeDir="false" afterPath="$PROJECT_DIR$/generate_content.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="2jAtYpC3yuZ2UmLlAtOdfwRXVRu" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/media/zhaoyang-new/workspace/Molecular_Karyotype/KarReporter/example_input&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.0820_new_visualization.executor": "Run",
+    "Python.generate_report.executor": "Run",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/tingy/Zhaoyang-Repo/KarComparator",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\tingy\Zhaoyang-Repo\KarReporter\example_input\subset_test" />
       <recent name="$PROJECT_DIR$/example_input" />
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.generate_report">
+    <configuration name="0820_new_visualization" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="KarReporter" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/0820_new_visualization.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="KT_interpreter_html_report" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="KarReporter" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -66,11 +120,49 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="generate_report" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="KarReporter" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/generate_report.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.0820_new_visualization" />
+      <item itemvalue="Python.generate_report" />
+      <item itemvalue="Python.KT_interpreter_html_report" />
+    </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.generate_report" />
+        <item itemvalue="Python.0820_new_visualization" />
         <item itemvalue="Python.KT_interpreter_html_report" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-PY-242.20224.347" />
+        <option value="bundled-python-sdk-c2d6afa66fbe-39cff9de6eef-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-242.20224.347" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -81,6 +173,8 @@
       <option name="presentableId" value="Default" />
       <updated>1720841760306</updated>
       <workItem from="1720841762698" duration="5152000" />
+      <workItem from="1724169737892" duration="63000" />
+      <workItem from="1724169806498" duration="31064000" />
     </task>
     <task id="LOCAL-00001" summary="added readme and example input files">
       <created>1720850852546</created>
@@ -118,7 +212,25 @@
     <MESSAGE value="updated readme" />
     <option name="LAST_COMMIT_MESSAGE" value="updated readme" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/KT_interpreter_html_report.py</url>
+          <line>84</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/KT_interpreter_html_report.py</url>
+          <line>126</line>
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/KarReporter$KT_interpreter_html_report.coverage" NAME="KT_interpreter_html_report Coverage Results" MODIFIED="1720847665052" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KarReporter$0820_new_visualization.coverage" NAME="0820_new_visualization Coverage Results" MODIFIED="1724174181189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KarReporter$generate_report.coverage" NAME="generate_report Coverage Results" MODIFIED="1724210246784" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

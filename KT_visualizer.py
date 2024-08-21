@@ -102,7 +102,9 @@ color_mapping = {
     'gpos100': 'black',  # full black
     'acen': 'red',  # centromere
     'gvar': 'blue',  # variable region
-    'stalk': '#87CEEB'  # light blue (skyblue)
+    'stalk': '#87CEEB',  # light blue (skyblue)
+    'alt1': '#dddddd',
+    'alt2': '#aaaaaa'
 }
 chr_color_mapping = {
     '1': '#73a9a3',
@@ -156,19 +158,6 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling):
             # do not label band that are too narrow
             ax.text(x_offset + (start + end) / 2 + CHR_HEADER_X_OFFSET, y_offset + BAND_WIDTH / 2 + CHR_BAND_MARK_Y_OFFSET, name,
                     ha='center', va='center', fontsize=BAND_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT)
-
-    # ## Origins
-    # for origin in chromosome_data['origins']:
-    #     start = origin['start']
-    #     end = origin['end']
-    #     name = origin['name']
-    #     color = chr_color_mapping[name]
-    #     text_color = get_text_color(color)
-    #     origin_bands = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET, y_offset + ORIGIN_Y_OFFSET), end - start, ORIGIN_WIDTH,
-    #                                      linewidth=1, edgecolor='black', facecolor=color, alpha=ORIGIN_ALPHA, lw=ORIGIN_RECT_LINEWIDTH)
-    #     ax.add_patch(origin_bands)
-    #     ax.text(x_offset + (start + end) / 2 + CHR_HEADER_X_OFFSET, y_offset + ORIGIN_Y_OFFSET + ORIGIN_WIDTH / 2 + ORIGIN_MARK_Y_OFFSET, name,
-    #             ha='center', va='center', fontsize=ORIGIN_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT)
 
     ## Orientations Contig
     for contig in chromosome_data['orientation_contigs']:
@@ -276,7 +265,7 @@ def rotate_image(input_image_path, output_image_path):
         rotated_img.save(output_image_path)
 
 
-def generate_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
+def generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
     index_to_segment_dict = reverse_dict(segment_to_index_dict)
     cyto_path = create_cytoband_path()
     vis_input = []
@@ -288,6 +277,61 @@ def generate_visualizer_input(events, aligned_haplotypes, segment_to_index_dict)
                    'name': hap.chrom,  # remove/reassign
                    'length': get_chr_length(segment_list),
                    'bands': label_cytoband(segment_list, cyto_path),
+                   'orientation_contigs': get_orientation_contigs(segment_list),
+                   'highlight': chr_is_highlighted(events, hap.id),
+                   'sv_labels': []}
+        vis_input.append(c_entry)
+    assign_sv_labels(events, vis_input, index_to_segment_dict)
+
+    return vis_input
+
+
+def generate_segment_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
+    ## make fixed color mapping for each segment
+    all_indexed_segs = set()
+    for hap in aligned_haplotypes:
+        all_indexed_segs.update(set([x[:-1] for x in hap.mt_hap]))
+    all_indexed_segs = sorted(list(all_indexed_segs), key=int)
+
+    alternating_stain = ['alt1', 'alt2']  # alternate adjacent bands by two stains
+    seg_color_mapping = {}
+    stain_idx = 0
+    for seg in all_indexed_segs:
+        seg_color_mapping[seg] = alternating_stain[stain_idx]
+        stain_idx = (stain_idx + 1) % len(alternating_stain)
+
+    def label_segment_for_segmentview(typed_segment_list, indexed_segment_list):
+        """
+        for a single aligned haplotype, generate the segment-view "band" patterns
+        @param typed_segment_list:
+        @param indexed_segment_list:
+        @return:
+        """
+        if len(typed_segment_list) != len(indexed_segment_list):
+            raise RuntimeError()
+
+        bands = []
+        c_len = 0
+        for (typed_segment, indexed_segment) in zip(typed_segment_list, indexed_segment_list):
+            seg_len = len(typed_segment) / 1e6  # scale by Mbp
+            c_band = {'band': indexed_segment,
+                      'start': c_len,
+                      'end': c_len + seg_len,
+                      'stain': seg_color_mapping[indexed_segment[:-1]]}
+            c_len += seg_len
+            bands.append(c_band)
+        return bands
+
+    index_to_segment_dict = reverse_dict(segment_to_index_dict)
+    vis_input = []
+    for hap_idx, hap in enumerate(aligned_haplotypes):
+        segment_list = indexed_segments_to_typed_segments(hap.mt_hap, index_to_segment_dict)
+        c_entry = {'hap_id': hap.id,
+                   'segment_list': hap.mt_hap,  # this remains un-altered
+                   'chr': hap.chrom,
+                   'name': hap.chrom,  # remove/reassign
+                   'length': get_chr_length(segment_list),
+                   'bands': label_segment_for_segmentview(segment_list, hap.mt_hap),
                    'orientation_contigs': get_orientation_contigs(segment_list),
                    'highlight': chr_is_highlighted(events, hap.id),
                    'sv_labels': []}
@@ -329,7 +373,6 @@ def get_orientation_contigs(segment_list):
                                 'origin': current_chr_origin.replace('Chr', '')})
 
     return orientation_contigs
-
 
 
 def chr_is_highlighted(input_events, hap_id):
@@ -661,6 +704,9 @@ def test_artificial_chr_image():
     rotate_image('test_fig.png', 'test_fig_rotated.png')
 
 
+
+##########################IO###########################
+
 def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
     plt.rcParams['figure.dpi'] = IMAGE_DPI
 
@@ -770,9 +816,6 @@ def apply_scaling_to_vis(vis_entry, scaling_factor):
     for band in vis_entry['bands']:
         band['start'] = band['start'] * scaling_factor
         band['end'] = band['end'] * scaling_factor
-    # for origin in vis_entry['origins']:
-    #     origin['start'] = origin['start'] * scaling_factor
-    #     origin['end'] = origin['end'] * scaling_factor
     for sv_label in vis_entry['sv_labels']:
         sv_label['pos'] = sv_label['pos'] * scaling_factor
     for orientation in vis_entry['orientation_contigs']:

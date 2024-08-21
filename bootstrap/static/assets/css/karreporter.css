@@ -6,7 +6,8 @@
 
 #report
 {
-    padding-left:40px;
+    padding-left:400px;
+    padding-right:400px;
 }
 
-.section-buffer { margin-top:20px; margin-bottom: 20px; }
+.section-buffer { margin-top:40px; margin-bottom: 20px; }

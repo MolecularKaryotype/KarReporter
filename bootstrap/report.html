@@ -6,30 +6,94 @@
 
 {% block content %}
 
-<div>
-    <h2 style="text-align:center">{{title}}</h2>
+<style>
+    .table-header {
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 0px;
+    }
+    .collapse-section-header {
+        font-size: 18px;
+        font-weight: bold;
+    }
+    .title-master-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding-left: 400px;
+        padding-right: 400px;
+    }
+    .title-container {
+        flex: 0 0 44%;
+        max-width: 44%;
+        text-align: center;
+    }
+    .toggle-container {
+        flex: 0 0 28%;
+        max-width: 28%;
+        align-items: center;
+    }
+    .text-container {
+        flex: 0 0 72%;
+        max-width: 72%;
+    }
+    .image-container {
+        flex: 0 0 28%;
+        max-width: 28%;
+    }
+    .toggle-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+    }
+</style>
+
+<div class="title-master-container">
+    <div class="toggle-container">
+    </div>
+    <div class="title-container">
+        <h2 style="text-align:center; margin-top: 14px; margin-bottom:0;">{{title}}</h2>
+        <div id="report_page_top" style="text-align:center"></div>
+    </div>
+    <div class="toggle-container">
+        <div class="toggle-container" style="text-align: center;">
+            <button class="toggle-button" id="toggleButton" onclick="toggleImage()">Segments</button>
+        </div>
+    </div>
 </div>
-<div id="report_page_top" style="text-align:center"></div>
+
+
+
 <div id="report" class="col-lg-12">
-    {% for header, image, iscn, gene_report, debug in content %}
+    {% for header, image1, image2, iscn, gene_report, debug_info in content %}
     <div class="container1" id="{{ loop.index }}">
         <div class="row">
-            <div class="col-md-9">
-                <h3>{{header}}</h3>
+            <div class="text-container">
+                <h2 style="padding-top: 20px">{{header}}</h2>
                 <div class="iscn section-buffer">
-                    <ul class="list-group">
+                    <p><span class="table-header" style="margin-top: 20px">Structural Variants (SV)</span></p>
+                    <ul class="list-group" style="padding-left: 24px">
                         {% for sv in iscn %}
-                        <li class="list-group-item"><p><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p></li>
+                        <li class="list-group-item" style="border: none;"><p style="margin-bottom: 0; font-size: 20px;"><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p></li>
                         {% endfor %}
-                      </ul>
+                    </ul>
                 </div>
+
+                <p><span class="table-header" style="margin-top: 20px">Potentially disrupted gene in DDG2P</span></p>
                 {% if gene_report %}
-                <div class="table-container  section-buffer">
+                <div class="table-container">
                     <table id="gene_report" class="table table-bordered table-striped table-hover cell-border compact stripe gene_report">
                         <thead>
                             <tr>
                                 {% for col_name in columns_order %}
-                                <th class="dt-head{% if not loop.first %}-right{%else%}-left{% endif %} ">{{ col_name }}</th>
+                                <th class="dt-head{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ col_name }}</th>
                                 {% endfor %}
                             </tr>
                         </thead>
@@ -37,7 +101,7 @@
                             {% for row in gene_report %}
                             <tr>
                                 {% for col_name in columns_order %}
-                                <td class="dt-body{% if not loop.first %}-right{%else%}-left{% endif %} ">{{ row[col_name] }}</td>
+                                <td class="dt-body{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ row[col_name] }}</td>
                                 {% endfor %}
                             </tr>
                             {% endfor %}
@@ -45,65 +109,71 @@
                     </table>
                 </div>
                 {%else%}
-                <div class="alert alert-warning" role="alert">
-                    There are no genes of interest.
+                <div class="alert alert-warning" role="alert" style="background-color: #c0e1b9; color: #333; font-size: 16px">
+                    none found in input data with high confidence
                 </div>
                 {% endif %}
-                <div class="segment-table-container  section-buffer">
-                    <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment">
-                        <thead>
-                            <tr>
-                                <th class="dt-head-left">Segment</th>
-                                <th class="dt-head-right">chr</th>
-                                <th class="dt-head-right">start</th>
-                                <th class="dt-head-right">end</th>
-                                <th class="dt-head-right">size</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for seg in debug.segs %}
-                            <tr>
-                                <td class="dt-body-left">{{ seg[0] }}</td>
-                                <td class="dt-body-right">{{ seg[1] }}</td>
-                                <td class="dt-body-right">{{ seg[2] }}</td>
-                                <td class="dt-body-right">{{ seg[3] }}</td>
-                                <td class="dt-body-right">{{ seg[4] }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <div class="accordion segment-table-container  section-buffer" id="mt_gaps">
-                        <div class="accordion-item">
-                        <h2 class="accordion-header" id="panelsStayOpen-headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
-                            mt_gaps
-                            </button>
-                        </h2>
-                        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
-                            <div class="accordion-body">
-                                <ul class="list-group">
-                                    {% for mt_hap in debug.mt_haps %}
-                                        <li class="list-group-item"><p>{{ debug.IDs[loop.index - 1] }}: {{ mt_hap }}</p></li>
-                                    {% endfor %}
-                                </ul>
+
+
+                <div class="accordion segment-table-container  section-buffer" id="omkar_reference" style="margin-top: 70px">
+                    <div class="accordion-item">
+                    <h2 class="accordion-header" id="panelsStayOpen-headingOne">
+                        <button class="accordion-button collapsed" style="padding-left: 10px" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
+                        <span class="collapse-section-header">OMKar Output Reference</span>
+                        </button>
+                    </h2>
+                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                        <div class="accordion-body" style="padding: 10px">
+                            <p><span style="font-size: 18px; font-weight: bold;">Paths</span></p>
+                            <ul class="list-group" style="margin-bottom: 30px">
+                                {% for mt_hap in debug_info.mt_haps %}
+                                    <li class="list-group-item"><p style="margin-bottom: 0;">{{ debug_info.IDs[loop.index - 1] }}: {{ mt_hap }}</p></li>
+                                {% endfor %}
+                            </ul>
+                            <p><span style="font-size: 18px; font-weight: bold;">Segment List</span></p>
+                            <div class="segment-table-container">
+                                <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
+                                    <thead>
+                                        <tr>
+                                            <th class="dt-head-right">Segment</th>
+                                            <th class="dt-head-right">chr</th>
+                                            <th class="dt-head-right">start</th>
+                                            <th class="dt-head-right">end</th>
+                                            <th class="dt-head-right">size</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for seg in debug_info.segs %}
+                                        <tr>
+                                            <td class="dt-body-right">{{ seg[0] }}</td>
+                                            <td class="dt-body-right">{{ seg[1] }}</td>
+                                            <td class="dt-body-right">{{ seg[2] }}</td>
+                                            <td class="dt-body-right">{{ seg[3] }}</td>
+                                            <td class="dt-body-right">{{ seg[4] }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                        </div>
                     </div>
+                    </div>
+                </div>
+
+                <div>
+                    <!--debug tables-->
                     {% if debug %}
-                    <div class="accordion segment-table-container  section-buffer" id="wt_gaps">
+                    <div class="accordion segment-table-container  section-buffer" id="wt_haps">
                         <div class="accordion-item">
                         <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
-                            wt_gaps
+                            wt_haps
                             </button>
                         </h2>
                         <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
                             <div class="accordion-body">
                                 <ul class="list-group">
-                                    {% for wt_hap in debug.wt_haps %}
+                                    {% for wt_hap in debug_info.wt_haps %}
                                         <li class="list-group-item"><p>{{ wt_hap }}</p></li>
                                     {% endfor %}
                                 </ul>
@@ -123,8 +193,8 @@
                         <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
                             <div class="accordion-body">
                                 <ul class="list-group">
-                                    {% for mt_aligned in debug.mt_aligned %}
-                                        <li class="list-group-item"><p>{{ mt_aligned }} {{ debug.wt_aligned[loop.index - 1] }}</p></li>
+                                    {% for mt_aligned in debug_info.mt_aligned %}
+                                        <li class="list-group-item"><p>{{ mt_aligned }} {{ debug_info.wt_aligned[loop.index - 1] }}</p></li>
                                     {% endfor %}
                                 </ul>
                             </div>
@@ -134,8 +204,10 @@
                     {% endif %}
                 </div>
             </div>
-            <div class="col-md-3">
-                <img src="data:image/png;base64,{{ image }}" alt="Image" class="img-fluid">
+            <div class="image-container">
+<!--                <img src="data:image/png;base64,{{ image2 }}" alt="Image" class="img-fluid">-->
+                <img id="image1" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid">
+                <img id="image2" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid">
             </div>
         </div>
     </div>
@@ -164,5 +236,23 @@
         });
 
     })
+
+    function toggleImage() {
+        // Get the image elements
+        var image1 = document.getElementById("image1");
+        var image2 = document.getElementById("image2");
+        var button = document.getElementById("toggleButton");
+
+        // Toggle the display property and update the button text
+        if (image1.style.display === "none") {
+            image1.style.display = "block";
+            image2.style.display = "none";
+            button.textContent = "Segments";
+        } else {
+            image1.style.display = "none";
+            image2.style.display = "block";
+            button.textContent = "Cytobands";
+        }
+    }
 </script>
 {% endblock onreadyBlock %}
