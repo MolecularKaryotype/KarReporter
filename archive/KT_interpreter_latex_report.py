@@ -129,7 +129,7 @@ def batch_generate_latex_case_str(omkar_output_dir, image_dir, compile_image=Fal
                 c_events = sort_events(c_events)
                 iscn_events, genes_report = format_report(c_events, aligned_haplotypes, reverse_dict(segment_dict))
                 ## generate image
-                c_vis_input = generate_visualizer_input(c_events, c_aligned_haplotypes, segment_dict)
+                c_vis_input = generate_cytoband_visualizer_input(c_events, c_aligned_haplotypes, segment_dict)
 
                 def vis_key(input_vis):
                     chr_val = input_vis['chr'][3:]

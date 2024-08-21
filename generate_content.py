@@ -336,10 +336,12 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
     filenames = []
     clusters = []
     cases_with_events = []
-    image_paths = []
+    image1_paths = []
+    image2_paths = []
     iscn_reports = []
     genes_reports = []
     case_event_type_reports = []
+    case_complexities = []
     debug_outputs = []  # list of dicts [{'segs': [], 'mt_haps': [], 'wt_haps': []}]
     files = [file for file in os.listdir(omkar_output_dir)]
     # files = sorted(files, key=int_file_keys)
@@ -373,7 +375,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
         for image_cluster_idx, (c_cluster, c_events) in enumerate(zip(dependent_clusters, cluster_events)):
             # to remove all later file names, check cluster_idx != 0
             
-            headers.append('{}: cluster {} (out of {})'.format(filename, image_cluster_idx + 1, n_clusters))
+            headers.append('{}: chromosomal cluster {} (of {})'.format(filename, image_cluster_idx + 1, n_clusters))
             ## include all homologues
             event_chr = set()
             for cluster_idx in c_cluster:
@@ -388,8 +390,6 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             ## generate report text
             c_events = sort_events(c_events)
             iscn_events, genes_report, event_type_reports = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
-            ## generate image
-            c_vis_input = generate_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
 
             def vis_key(input_vis):
                 chr_val = input_vis['chr'][3:]
@@ -403,8 +403,10 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
                     return_val += 0.5  # highlight always later
                 return return_val
 
+            ## generate images
+            c_vis_input = generate_cytoband_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
             c_vis_input = sorted(c_vis_input, key=vis_key)
-            image_prefix = "{}/{}_imagecluster{}".format(image_dir, filename, image_cluster_idx)
+            image_prefix = "{}/{}_cytoband_imagecluster{}".format(image_dir, filename, image_cluster_idx)
             image_path = image_prefix + '_rotated.png'
             relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]
             if compile_image:
@@ -412,8 +414,21 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
                     make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_VERTICAL_SPLIT)
                 else:
                     make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_HORIZONTAL_SPLIT)
+            image1_paths.append(relative_image_path)
 
-            image_paths.append(relative_image_path)
+            c_vis_input = generate_segment_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
+            c_vis_input = sorted(c_vis_input, key=vis_key)
+            image_prefix = "{}/{}_segmentview_imagecluster{}".format(image_dir, filename, image_cluster_idx)
+            image_path = image_prefix + '_rotated.png'
+            relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]
+            if compile_image:
+                if len(c_vis_input) <= 4:
+                    make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_VERTICAL_SPLIT)
+                else:
+                    make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix,
+                               IMG_LENGTH_SCALE_HORIZONTAL_SPLIT)
+            image2_paths.append(relative_image_path)
+
             iscn_reports.append(iscn_events)
             genes_reports.append(genes_report)
             file_event_type_reports.append(event_type_reports)
@@ -439,8 +454,8 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
                 hap_found = False
                 for aligned_haplotype in aligned_haplotypes:
                     if aligned_haplotype.id == c_vis['hap_id']:
-                        debug_mt_haps.append(aligned_haplotype.mt_hap)
-                        debug_wt_haps.append(aligned_haplotype.wt_hap)
+                        debug_mt_haps.append(str(aligned_haplotype.mt_hap).replace("'", ''))
+                        debug_wt_haps.append(str(aligned_haplotype.wt_hap).replace("'", ''))
                         debug_mt_aligned.append(aligned_haplotype.mt_aligned)
                         debug_wt_aligned.append(aligned_haplotype.wt_aligned)
                         hap_found = True
@@ -450,28 +465,51 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             debug_outputs.append({'segs': debug_segs, 'mt_haps': debug_mt_haps, 'wt_haps': debug_wt_haps, 'IDs': debug_hap_ids,
                                   'mt_aligned': debug_mt_aligned, 'wt_aligned': debug_wt_aligned})
 
-        #TODO Process the file dictionary  and add all the numbers for each event type and create a new dictionary
         #Add the new dictionary into the case_event_type_reports
-        case_event_type_reports.append(combine_dictionaries(file_event_type_reports))
+        event_multiplicity_str, cluster_complexity = parse_event_multiplicities(file_event_type_reports)
+        case_event_type_reports.append(event_multiplicity_str)
+        case_complexities.append(cluster_complexity)
         
-    return filenames, clusters, headers, cases_with_events, image_paths, iscn_reports, genes_reports, case_event_type_reports, debug_outputs
+    return filenames, clusters, headers, cases_with_events, image1_paths, image2_paths, iscn_reports, genes_reports, case_event_type_reports, case_complexities, debug_outputs
 
-def combine_dictionaries(dict_list):
-    # Initialize an empty dictionary to hold the combined results
+
+def parse_event_multiplicities(dict_list):
     combined_dict = {}
-    
-    # Iterate through each dictionary in the list
+
     for d in dict_list:
-        # Iterate through each key-value pair in the current dictionary
         for key, value in d.items():
-            # If the key is not already in the combined dictionary, add it with the current value
+            key = key.replace('left_duplication_inversion', 'duplication_inversion')
+            key = key.replace('right_duplication_inversion', 'duplication_inversion')
             if key not in combined_dict:
                 combined_dict[key] = value
-            # If the key is already in the combined dictionary, add the current value to the existing value
             else:
                 combined_dict[key] += value
-    
-    return combined_dict
+
+    # sort dictionary in correct event order, and return complexity
+    event_order = ['balanced_reciprocal_translocation',
+                   'nonreciprocal_translocation',
+                   'duplication_inversion',
+                   'inversion',
+                   'duplicated_insertion',
+                   'tandem_duplication',
+                   'deletion']
+    complexity_mapping = {'balanced_reciprocal_translocation': 2,
+                          'nonreciprocal_translocation': 3,
+                          'duplication_inversion': 2,
+                          'inversion': 2,
+                          'duplicated_insertion': 2,
+                          'tandem_duplication': 1,
+                          'deletion': 1}
+    total_complexity = 0
+    output_string = []
+    for event in event_order:
+        if event in combined_dict and combined_dict[event] > 0:
+            total_complexity += complexity_mapping[event] * combined_dict[event]
+            output_string.append(f"<b>{event.replace('_', ' ')}:</b> {combined_dict[event]}")
+    output_string = ", ".join(output_string)
+
+    return output_string, total_complexity
+
 
 def get_ucsc_url(chrom, start_pos, end_pos, db='hg38'):
     prefix = 'https://genome.ucsc.edu/cgi-bin/hgTracks?db={}' \
