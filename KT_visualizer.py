@@ -825,7 +825,7 @@ def apply_scaling_to_vis(vis_entry, scaling_factor):
 
 
 if __name__ == '__main__':
-    # omkar_file_path = '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/real_case_data/dremsek_OMKar_output_paths/39.txt'
+    # omkar_file_path = '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/real_case_data/dremsek_OMKar_output_paths/dremsek_39.txt'
     # mt_indexed_lists, mt_path_chrs, segment_to_index_dict, segment_size_dict = read_OMKar_to_indexed_list(omkar_file_path)
     # mt_path_chrs = [info.split(': ')[-1] for info in mt_path_chrs]
     # wt_path_dict = generate_wt_from_OMKar_output(segment_to_index_dict)
