@@ -375,7 +375,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
         for image_cluster_idx, (c_cluster, c_events) in enumerate(zip(dependent_clusters, cluster_events)):
             # to remove all later file names, check cluster_idx != 0
             
-            headers.append('{}: chromosomal cluster {} (of {})'.format(filename, image_cluster_idx + 1, n_clusters))
+            headers.append('Chromosomal Cluster {} (of {})'.format(image_cluster_idx + 1, n_clusters))
             ## include all homologues
             event_chr = set()
             for cluster_idx in c_cluster:

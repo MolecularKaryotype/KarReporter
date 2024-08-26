@@ -61,6 +61,7 @@ BAND_SATURATION = 1
 BAND_ALPHA = 0.85
 BAND_TEXT_WEIGHT = 'normal'
 ORIGIN_ALPHA = 0.7
+MIN_LEN_BAND_LABEL = 1
 
 TICK_MARKING_X_OFFSET = 0.25  # helps to center the tickmarkings
 TICK_LEN = 0.2
@@ -154,7 +155,7 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling):
         chrom_bands = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET, y_offset + CHR_BAND_Y_OFFSET), end - start, BAND_WIDTH,
                                         linewidth=1, edgecolor='black', facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
         ax.add_patch(chrom_bands)
-        if end - start > (1 / len_scaling):
+        if end - start > (MIN_LEN_BAND_LABEL / len_scaling):
             # do not label band that are too narrow
             ax.text(x_offset + (start + end) / 2 + CHR_HEADER_X_OFFSET, y_offset + BAND_WIDTH / 2 + CHR_BAND_MARK_Y_OFFSET, name,
                     ha='center', va='center', fontsize=BAND_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT)
@@ -710,10 +711,13 @@ def test_artificial_chr_image():
 def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
     plt.rcParams['figure.dpi'] = IMAGE_DPI
 
-    if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
-        scaled_image_length = (i_max_length / 200) * 8 * param_image_len_scale
-    else:
-        scaled_image_length = (MAX_CHR_LEN_IF_NO_SCALE / 200) * 8 * param_image_len_scale
+    # if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
+    #     scaled_image_length = (i_max_length / 200) * 8 * param_image_len_scale
+    # else:
+    #     scaled_image_length = (MAX_CHR_LEN_IF_NO_SCALE / 200) * 8 * param_image_len_scale
+
+    ## now, all images are of the same length
+    scaled_image_length = (MAX_CHR_LEN_IF_NO_SCALE / 200) * 8 * param_image_len_scale
 
     n_chrom = len(vis_input)
     if n_chrom <= 4:
@@ -723,19 +727,24 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
     fig, i_ax = plt.subplots(figsize=(scaled_image_length, image_width))
 
     ## Scale all Chr in the cluster if at least one Chr is too long to fit
-    if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
-        chr_len_scaling = 1
-    else:
-        chr_len_scaling = MAX_CHR_LEN_IF_NO_SCALE / i_max_length
-        for vis in vis_input:
-            apply_scaling_to_vis(vis, chr_len_scaling)
+    # if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
+    #     chr_len_scaling = 1
+    # else:
+    #     chr_len_scaling = MAX_CHR_LEN_IF_NO_SCALE / i_max_length
+    #     for vis in vis_input:
+    #         apply_scaling_to_vis(vis, chr_len_scaling)
+
+    ## Scale all Chr to be displayed in the same sized box
+    chr_len_scaling = MAX_CHR_LEN_IF_NO_SCALE / i_max_length
+    for vis in vis_input:
+        apply_scaling_to_vis(vis, chr_len_scaling)
 
     ## Merge SV-labels if they are too close
     for vis in vis_input:
         merge_sv_labels(vis, SV_LABEL_MIN_DISTANCE / chr_len_scaling)
 
     ## Limit chrom plot size
-    i_ax.set_xlim(0, min(i_max_length, MAX_CHR_LEN_IF_NO_SCALE) + CHR_HEADER_X_OFFSET + 1.5)
+    i_ax.set_xlim(0, min(i_max_length * chr_len_scaling, MAX_CHR_LEN_IF_NO_SCALE) + CHR_HEADER_X_OFFSET + 1.5)
     if n_chrom <= 4:
         ylim = 16
     elif n_chrom <= 8:
