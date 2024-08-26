@@ -111,6 +111,8 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     if not os.path.exists(output_dir):
         os.makedirs(output_dir,exist_ok=True)
         #Copy the static folder into output folder and overwrite
+    if os.path.exists(output_dir+"/static"):
+        shutil.rmtree(output_dir+"/static")
     shutil.copytree("bootstrap/static", output_dir+"/static", dirs_exist_ok=True)
     ###
 

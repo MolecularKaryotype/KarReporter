@@ -1,56 +1,146 @@
 {% extends "base.html" %}
-
-<!-- Create the dashboard table here -->
 {% block content %}
 
-<div class="col-lg-12" style="padding-left: 400px; padding-right: 400px">
-    <div class="card" style="border: none; padding-top: 40px">
-      <div class="card-title" style="">
-          <h3 class="card-title" style="font-weight: bold">Dashboard</h3>
-      </div>
-      <div class="card-body" style="padding-left: 0; padding-top: 0">
-       
-            <table id="dashboard" class="table table-bordered table-hover cell-border">
-              <thead>
-                <tr style="font-size: 18px">
-                  <th class="dt-head-left">Case</th>
-                  <th class="dt-head-left"># Chromosomal Clusters</th>
-                  <th class="dt-head-left">Complexity</th>
-                  <th class="dt-head-left">Events Summary</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for filename, cluster, case_event_type_report, case_complexity in content %}
-                {% set  colors = [
-                  "bg-primary",
-                  "bg-secondary",
-                  "bg-success",
-                  "bg-danger",
-                  "bg-warning text-dark",
-                  "bg-info text-dark",
-                  "bg-light text-dark",
-                  "bg-dark"
-                ] %}
-                <tr>
-                  <td class="dt-body-left">
-                    <a class="yoo-table-icon-title" href="{{filename}}.html" target="_blank">{{filename}}</a>
-                  </td>
-                  <td class="dt-body-left">
-                    <p class="yoo-table-icon-title">{{cluster}}</p>
-                  </td>
-                  <td class="dt-body-left">
-                    <p class="yoo-table-icon-title">{{ case_complexity }}</p>
-                  </td>
-                  <td class="dt-body-left">
-                    <p class="yoo-table-icon-title">{{ case_event_type_report }}</p>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-        
-      </div>
+<style>
+    /*fonts*/
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-Italic.ttf') format('truetype');
+        font-weight: 400;
+        font-style: italic;
+    }
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');
+        font-weight: 700;
+        font-style: italic;
+    }
+
+    body {
+        font-size: 14.4px;
+        font-family: 'Lato', sans-serif;
+        /*transform: scale(0.8); !* Scale the body content to 80% *!*/
+        /*transform-origin: top left; !* Scale from the top-left corner *!*/
+        /*width: 125%; !* Compensate for the scaling to prevent horizontal scrollbar *!*/
+        /*height: 125%; !* Compensate for the scaling to prevent vertical scrollbar *!*/
+    }
+    .h1-font {
+        font-size: 2.05em;
+    }
+    .h2-font {
+        font-size: 1.75em;
+    }
+    .h3-font {
+        font-size: 1.55em;
+    }
+    .h4-font {
+        font-size: 1.25em;
+    }
+    .h5-font {
+        font-size: 1.1em;
+    }
+    .h6-font {
+        font-size: 1em;
+    }
+
+    /*containers*/
+    .dashboard-master-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+    }
+    .dashboard-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .background-shading {
+        background-color: #f6f6fa;
+        border-radius: 1em;
+    }
+</style>
+
+
+<!-- Create the dashboard table here -->
+
+<div class="dashboard-master-container">
+  <div class="dashboard-container">
+    <p class="h1-font" style="font-weight:bold; margin-top:0.75em; padding-left: 0.5em">Dashboard</p>
+    <div class="segment-table-container background-shading" style="padding: 1.25em;">
+      <table id="dashboard-table" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
+          <thead class="h4-font">
+                <th class="dt-head-left">Sample</th>
+                <th class="dt-head-left"># Chromosomal Clusters</th>
+                <th class="dt-head-left">Complexity</th>
+                <th class="dt-head-left">Events Summary</th>
+<!--                <th class="dt-head-left">Summary Plot</th>-->
+              </tr>
+          </thead>
+            <tbody class="h5-font">
+              {% for filename, cluster, case_event_type_report, case_complexity in content %}
+              <tr>
+                <td class="dt-body-left">
+                  <a class="yoo-table-icon-title" href="{{filename}}.html" target="_blank">{{filename}}</a>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{cluster}}</p>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{ case_complexity }}</p>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{ case_event_type_report }}</p>
+<!--                </td>-->
+<!--                  <td class="dt-body-left">-->
+<!--                  <p class="yoo-table-icon-title" href="assets/placeholder/23X_1q21_recurrent_microduplication_r1_imagecluster0_rotated.png">{{ case_event_type_report }}</p>-->
+<!--                </td>-->
+              </tr>
+              {% endfor %}
+            </tbody>
+      </table>
     </div>
   </div>
+</div>
 
 {% endblock content %}
+
+{% block onreadyBlock %}
+<script>
+  // dynamic width-ratio
+    function updateMaxWidth() {
+        const container = document.querySelector('.dashboard-container');
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const aspectRatio = viewportWidth / viewportHeight;
+
+        if (viewportWidth >= 1280) {
+            // Calculate width based on aspect ratio
+            const maxWidth = Math.min(viewportWidth, (1.4 / aspectRatio) * viewportWidth);
+            console.log('Viewport Width:', viewportWidth);
+            console.log('Aspect Ratio:', aspectRatio);
+            console.log('Calculated Width:', maxWidth + 'px');
+            container.style.width = maxWidth + 'px';
+        } else {
+            // Full width for smaller screens
+            container.style.width = '100%';
+        }
+    }
+    updateMaxWidth();
+    window.addEventListener('resize', updateMaxWidth);
+</script>
+{% endblock onreadyBlock %}

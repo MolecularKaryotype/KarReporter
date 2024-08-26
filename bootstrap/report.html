@@ -6,59 +6,150 @@
 
 {% block content %}
 
-<style>
-    .table-header {
-        font-size: 26px;
-        font-weight: bold;
-        margin-bottom: 0px;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8">
+
+    <style>
+    /*fonts*/
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-Regular.ttf') format('truetype');
+        font-weight: 400;
+        font-style: normal;
     }
-    .collapse-section-header {
-        font-size: 18px;
-        font-weight: bold;
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-Italic.ttf') format('truetype');
+        font-weight: 400;
+        font-style: italic;
     }
-    .title-master-container {
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-Bold.ttf') format('truetype');
+        font-weight: 700;
+        font-style: normal;
+    }
+    @font-face {
+        font-family: 'Lato';
+        src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');
+        font-weight: 700;
+        font-style: italic;
+    }
+
+    body {
+        font-size: 14.4px;
+        font-family: 'Lato', sans-serif;
+        /*transform: scale(0.8); !* Scale the body content to 80% *!*/
+        /*transform-origin: top left; !* Scale from the top-left corner *!*/
+        /*width: 125%; !* Compensate for the scaling to prevent horizontal scrollbar *!*/
+        /*max-height: 125%; !* Compensate for the scaling to prevent vertical scrollbar *!*/
+    }
+    .h1-font {
+        font-size: 2.05em;
+    }
+    .h2-font {
+        font-size: 1.75em;
+    }
+    .h3-font {
+        font-size: 1.55em;
+    }
+    .h4-font {
+        font-size: 1.25em;
+    }
+    .h5-font {
+        font-size: 1.1em;
+    }
+    .h6-font {
+        font-size: 1em;
+    }
+    /*containers*/
+    .case-master-container {
         display: flex;
         justify-content: center;
-        align-items: center;
         width: 100%;
-        padding-left: 400px;
-        padding-right: 400px;
+        /*max-height: 125%;  !*this is post scaling*!*/
+        margin-top: 1.25em;
+        margin-bottom: 1.25em;
+        /*overflow: hidden;*/
     }
-    .title-container {
-        flex: 0 0 44%;
-        max-width: 44%;
-        text-align: center;
+    .case-container {
+        width: 100%;
+        display: flex;
     }
+
+    .left-container {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .cluster-text-container{
+        display: flex;
+        flex-direction: column;
+    }
+
+    .spacer-container {
+        /*fixed container between text and image*/
+        width: 1.5vw;
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+
+    .right-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 1.6em;
+        width: 19vw;
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+
     .toggle-container {
         display: flex;
-        flex: 0 0 28%;
-        max-width: 28%;
         align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-right: 1.3em;
     }
-    .text-container {
-        flex: 0 0 72%;
-        max-width: 72%;
+
+    .cluster-image-container {
+        display: flex;
+        width: 100%;
+        flex: 1;
     }
-    .image-container {
-        flex: 0 0 28%;
-        max-width: 28%;
+
+    /*shading box*/
+    .background-shading {
+        background-color: #f6f6fa;
+        border-radius: 1em;
+    }
+    .list-group-item {
+        background-color: transparent;
+    }
+    .accordion {
+        background-color: #f6f6fa;
+    }
+    .accordion-item {
+        background-color: #f6f6fa;
+    }
+    .accordion-button {
+        background-color: #f6f6fa;
     }
 
     /* Slider Switch Style */
     .switch {
         position: relative;
         display: inline-block;
-        width: 60px;
-        height: 34px;
-        margin-top: 20px;
+        width: 5.2em;
+        height: 2.6em;
     }
-
     .switch input {
         opacity: 0;
         width: 0;
         height: 0;
     }
-
     .slider {
         position: absolute;
         cursor: pointer;
@@ -68,177 +159,170 @@
         bottom: 0;
         background-color: #ccc;
         transition: .4s;
-        border-radius: 34px;
+        border-radius: 2.6em;
     }
-
     .slider:before {
         position: absolute;
         content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
+        height: 2em;
+        width: 2em;
+        left: 0.31em;
+        bottom: 0.31em;
         background-color: white;
-        transition: .4s;
+        transition: .15s;
         border-radius: 50%;
     }
-
     input:checked + .slider {
         background-color: #2196F3;
     }
-
     input:checked + .slider:before {
-        transform: translateX(26px);
+        transform: translateX(2em);
     }
 
-    /* Label Text */
-    .slider-label {
-        display: inline-block;
-        margin-left: 10px;
-        font-size: 16px;
-        vertical-align: middle;
+    /*magnifying glass effect*/
+    .img-magnifier-container {
+      position: relative;
     }
 
-    #image2 {
-        display: none;
+    .img-magnifier-glass {
+      position: absolute;
+      border: 0.2em solid #000;
+      border-radius: 50%;
+      cursor: none;
+      /*Set the size of the magnifier glass:*/
+      width: 3.5em;
+      height: 3.5em;
     }
-
 </style>
-
-<div class="title-master-container">
-    <div class="toggle-container">
-    </div>
-    <div class="title-container">
-        <h2 style="text-align:center; margin-top: 14px; margin-bottom:0;">{{title}}</h2>
-        <div id="report_page_top" style="text-align:center"></div>
-    </div>
-    <div class="toggle-container">
-        <div style="flex: 0 0 28%; width: 20%;"></div>
-        <div style="flex: 0 0 65%; max-width: 65%; align-items: center">
-            <span class="slider-label" id="sliderLabel" style="padding-right: 10px">Show Segment-View</span>
-            <label class="switch">
-                <input type="checkbox" id="toggleSlider" onclick="toggleImage()">
-                <span class="slider"></span>
-            </label>
-        </div>
-        <div style="flex: 0 0 7%; width: 15%"></div>
-    </div>
-</div>
-
-<div id="report" class="col-lg-12">
-    {% for header, image1, image2, iscn, gene_report, debug_info in content %}
-    <div class="container1" id="{{ loop.index }}">
-        {% set container_id = loop.index %}
-        <div class="row">
-            <div class="text-container">
-                <h2 style="padding-top: 20px">{{header}}</h2>
-                <div class="iscn section-buffer">
-                    <p><span class="table-header" style="margin-top: 20px">Structural Variants (SV)</span></p>
-                    <ul class="list-group" style="padding-left: 24px">
-                        {% for sv in iscn %}
-                        <li class="list-group-item" style="border: none;"><p style="margin-bottom: 0; font-size: 20px;"><strong>{{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}</p></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-
-                <p><span class="table-header" style="margin-top: 20px">Potentially disrupted gene in DDG2P</span></p>
-                {% if gene_report %}
-                <div class="table-container">
-                    <table id="gene_report" class="table table-bordered table-striped table-hover cell-border compact stripe gene_report">
-                        <thead>
-                            <tr>
-                                {% for col_name in columns_order %}
-                                <th class="dt-head{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ col_name }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in gene_report %}
-                            <tr>
-                                {% for col_name in columns_order %}
-                                <td class="dt-body{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ row[col_name] }}</td>
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {%else%}
-                <div class="alert alert-warning" role="alert" style="background-color: #c0e1b9; color: #333; font-size: 16px">
-                    none found in input data with high confidence
-                </div>
-                {% endif %}
+</head>
 
 
-                <div class="accordion segment-table-container  section-buffer" id="omkar_reference" style="margin-top: 70px">
-                    <div class="accordion-item">
-                    <h2 class="accordion-header" id="panelsStayOpen-headingOne">
-                        <button class="accordion-button collapsed" style="padding-left: 10px" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
-                        <span class="collapse-section-header">OMKar Output Reference</span>
-                        </button>
-                    </h2>
-                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
-                        <div class="accordion-body" style="padding: 10px">
-                            <p><span style="font-size: 18px; font-weight: bold;">Paths</span></p>
-                            <ul class="list-group" style="margin-bottom: 30px">
-                                {% for mt_hap in debug_info.mt_haps %}
-                                    <li class="list-group-item"><p style="margin-bottom: 0;">{{ debug_info.IDs[loop.index - 1] }}: {{ mt_hap }}</p></li>
+
+<div id="report" class="case-master-container">
+    <div class="case-container">
+        <div class="left-container">
+            <div class="h1-font" style="text-align:center; margin-top: 0; margin-bottom:0;">{{title}}</div>
+            <div id="report_page_top" style="text-align:center"></div>
+            <div class="stacked-cluster-text-containers" style="position:relative; flex:1;">
+                {% for header, image1, image2, iscn, gene_report, debug_info in content %}
+                    {% set cluster_id = loop.index %}
+                    <div class="cluster-text-container" id="cluster-text-{{ cluster_id }}">
+                        <div class="h2-font" style="font-weight:bold; margin-top:0.5em">{{header}}</div>
+                        <div class="clustered-sv-container background-shading" style="margin-top: 1.5em">
+                            <p><div class="h3-font" style="font-weight: bold; margin-bottom:0; padding-left: 0.75em">
+                                Clustered Structural Variants
+                            </div></p>
+                            <ul class="list-group" style="padding-left: 1.9em; padding-right: 0.75em">
+                                {% for sv in iscn %}
+                                <li class="list-group-item" style="border: none; padding:0; text-align:left ;">
+                                    <p style="margin-bottom: 0;"><div class="h4-font"><strong>
+                                        {{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}
+                                    </div></p>
+                                </li>
                                 {% endfor %}
                             </ul>
-                            <p><span style="font-size: 18px; font-weight: bold;">Segment List</span></p>
-                            <div class="segment-table-container">
-                                <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
-                                    <thead>
-                                        <tr>
-                                            <th class="dt-head-right">Segment</th>
-                                            <th class="dt-head-right">chr</th>
-                                            <th class="dt-head-right">start</th>
-                                            <th class="dt-head-right">end</th>
-                                            <th class="dt-head-right">size</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for seg in debug_info.segs %}
-                                        <tr>
-                                            <td class="dt-body-right">{{ seg[0] }}</td>
-                                            <td class="dt-body-right">{{ seg[1] }}</td>
-                                            <td class="dt-body-right">{{ seg[2] }}</td>
-                                            <td class="dt-body-right">{{ seg[3] }}</td>
-                                            <td class="dt-body-right">{{ seg[4] }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
+                        </div>
+                        <div class="genes-container background-shading" style="margin-top: 0.75em; padding: 0.75em;">
+                            <p><div class="h3-font" style="font-weight: bold; margin-bottom:0">Disrupted DDG2P Genes</div></p>
+                            {% if gene_report %}
+                                <div class="table-container">
+                                    <table id="gene_report" class="table table-bordered table-striped table-hover cell-border compact stripe gene_report">
+                                        <thead>
+                                            <tr class="h5-font">
+                                                {% for col_name in columns_order %}
+                                                <th class="dt-head{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ col_name }}</th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in gene_report %}
+                                            <tr class="h6-font">
+                                                {% for col_name in columns_order %}
+                                                <td class="dt-body{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ row[col_name] }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {%else%}
+                                <p class="h4-font" style="padding-left: 1.15em; font-weight: bold;">None Found</p>
+                            {% endif %}
+                        </div>
+                        <div class="omkar-output-container" style="margin-top: 0.75em">
+                            <div class="accordion segment-table-container" id="omkar_reference">
+                                <div class="accordion-item">
+                                    <div class="accordion-header" id="panelsStayOpen-headingOne">
+                                        <button class="h3-font accordion-button collapsed" style="padding-left:0.75em; font-weight:bold;" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
+                                            <p style="margin:0">OMKar Output</p>
+                                        </button>
+                                    </div>
+                                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                                        <div class="accordion-body" style="padding: 0.7em">
+                                            <p><div class="h4-font" style="font-weight: bold;">Paths</div></p>
+                                            <ul class="list-group" style="margin-bottom: 2.25em">
+                                                {% for mt_hap in debug_info.mt_haps %}
+                                                    <li class="list-group-item">
+                                                        <p class="h5-font" style="margin-bottom: 0;">
+                                                            {{ debug_info.IDs[loop.index - 1] }}: {{ mt_hap }}
+                                                        </p>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                            <p><div class="h4-font" style="font-weight: bold;">Segment List</div></p>
+                                            <div class="segment-table-container">
+                                                <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
+                                                    <thead>
+                                                        <tr class="h5-font">
+                                                            <th class="dt-head-right">Segment</th>
+                                                            <th class="dt-head-right">chr</th>
+                                                            <th class="dt-head-right">start</th>
+                                                            <th class="dt-head-right">end</th>
+                                                            <th class="dt-head-right">size</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for seg in debug_info.segs %}
+                                                        <tr class="h6-font">
+                                                            <td class="dt-body-right">{{ seg[0] }}</td>
+                                                            <td class="dt-body-right">{{ seg[1] }}</td>
+                                                            <td class="dt-body-right">{{ seg[2] }}</td>
+                                                            <td class="dt-body-right">{{ seg[3] }}</td>
+                                                            <td class="dt-body-right">{{ seg[4] }}</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    </div>
-                </div>
-
-                <div>
-                    <!--debug tables-->
-                    {% if debug %}
-                    <div class="accordion segment-table-container  section-buffer" id="wt_haps">
-                        <div class="accordion-item">
-                        <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
-                            wt_haps
-                            </button>
-                        </h2>
-                        <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
-                            <div class="accordion-body">
-                                <ul class="list-group">
-                                    {% for wt_hap in debug_info.wt_haps %}
-                                        <li class="list-group-item"><p>{{ wt_hap }}</p></li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
+                        <div id="debug-table">
+                        <!--debug tables-->
+                        {% if debug %}
+                        <div class="accordion segment-table-container " id="wt_haps">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
+                                    wt_haps
+                                    </button>
+                                </h2>
+                                <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
+                                    <div class="accordion-body">
+                                        <ul class="list-group">
+                                            {% for wt_hap in debug_info.wt_haps %}
+                                                <li class="list-group-item"><p>{{ wt_hap }}</p></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
                         </div>
                     </div>
 
-                    
-                    <div class="accordion segment-table-container  section-buffer" id="alignment">
+
+                    <div class="accordion segment-table-container" id="alignment">
                         <div class="accordion-item">
                         <h2 class="accordion-header" id="panelsStayOpen-headingThree">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseThree">
@@ -258,37 +342,81 @@
                     </div>
                     {% endif %}
                 </div>
+                    </div>
+                {% endfor %}
             </div>
-            <div class="image-container">
-                <img id="image1-{{ container_id }}" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid image1" style="display:block">
-                <img id="image2-{{ container_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2" style="display:none">
+        </div>
+        <div class="spacer-container"></div>
+        <div class="right-container">
+            <div class="toggle-container">
+                <p class="h5-font" style="margin:0  ">Show Segment-View</p>
+                <label class="switch" style="flex:1; max-width:4.62em; margin-left:0.7em">
+                    <input type="checkbox" id="toggleSlider" onclick="toggleImage()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="stacked-cluster-image-containers" style="margin-top:1.6em; position:relative; flex:1;">
+                {% for header, image1, image2, iscn, gene_report, debug_info in content %}
+                    {% set cluster_id = loop.index %}
+                    <div class="cluster-image-container" id="cluster-image-{{ cluster_id }}">
+                        <img id="image1-{{ cluster_id }}" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid image1 background-shading img-magnifier-container" style="display:block; z-index:5">
+                        <img id="image2-{{ cluster_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading" style="display:none; z-index:5">
+                    </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-{% endfor %}
 </div>
 {% endblock content %}
 
 {% block onreadyBlock %}
 <script>
-    $(document).ready(function () {
-        $(".container1").hide()
-        var result = [];
-        for (var i = 1; i <= {{content|length}}; i++) {
-            result.push($("#" + i));
+    // dynamic width-ratio
+    function updateMaxWidth() {
+        const container = document.querySelector('.case-container');
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const aspectRatio = viewportWidth / viewportHeight;
+
+        if (viewportWidth >= 1280) {
+            // Calculate width based on aspect ratio
+            const maxWidth = Math.min(viewportWidth, (1.45 / aspectRatio) * viewportWidth);
+            console.log('Viewport Width:', viewportWidth);
+            console.log('Aspect Ratio:', aspectRatio);
+            console.log('Calculated Width:', maxWidth + 'px');
+            container.style.width = maxWidth + 'px';
+        } else {
+            // Full width for smaller screens
+            container.style.width = '100%';
         }
-        var container = $('#report_page_top').pagination({
+    }
+    updateMaxWidth();
+    window.addEventListener('resize', updateMaxWidth);
+
+    $(document).ready(function () {
+        $(".cluster-text-container").hide()
+        $(".cluster-image-container").hide()
+        var displayIDs = []
+
+        for (var i = 1; i <= {{content|length}}; i++) {
+            displayIDs.push({
+                text: $("#cluster-text-" + i),
+                image: $("#cluster-image-" + i)
+            });
+        }
+        $('#report_page_top').pagination({
             pageSize: 1,
             pageRange: null,
             totalNumber: {{content|length}},
             showPageNumbers: true,
-            dataSource: result,
-            callback: function (data, pagination) {
-                $(".container1").hide()
-                data[0].show()
+            dataSource: displayIDs,
+            callback: function(data, pagination) {
+                $(".cluster-image-container").hide()
+                $(".cluster-text-container").hide()
+                data[0].text.show()
+                data[0].image.show()
             }
         });
-
     })
 
     function toggleImage() {
@@ -321,6 +449,75 @@
             label.textContent = "Show Segment-View";
         }
     }
+
+    function magnify(imgID, zoom) {
+        var img, glass, w, h, bw;
+        img = document.getElementById(imgID);
+
+        /* Create magnifier glass: */
+        glass = document.createElement("DIV");
+        glass.setAttribute("class", "img-magnifier-glass");
+
+        /* Insert magnifier glass: */
+        img.parentElement.insertBefore(glass, img);
+
+        /* Set background properties for the magnifier glass: */
+        glass.style.zIndex = "10";
+        glass.style.backgroundImage = "url('" + img.src + "')";
+        glass.style.backgroundRepeat = "no-repeat";
+        glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+        glass.style.backgroundColor = "#f6f6fa";
+        bw = 3;
+        w = glass.offsetWidth / 2;
+        h = glass.offsetHeight / 2;
+
+        /* Execute a function when someone moves the magnifier glass over the image: */
+        glass.addEventListener("mousemove", moveMagnifier);
+        img.addEventListener("mousemove", moveMagnifier);
+
+        /*and also for touch screens:*/
+        glass.addEventListener("touchmove", moveMagnifier);
+        img.addEventListener("touchmove", moveMagnifier);
+        function moveMagnifier(e) {
+            var pos, x, y;
+            /* Prevent any other actions that may occur when moving over the image */
+            e.preventDefault();
+            /* Get the cursor's x and y positions: */
+            pos = getCursorPos(e);
+            x = pos.x;
+            y = pos.y;
+            /* Prevent the magnifier glass from being positioned outside the image: */
+            // if (x > img.width - (w / zoom)) {x = img.width - (w / zoom);}
+            // if (x < w / zoom) {x = w / zoom;}
+            // if (y > img.height - (h / zoom)) {y = img.height - (h / zoom);}
+            // if (y < h / zoom) {y = h / zoom;}
+            if (x > img.width - (w / zoom) || x < w / zoom || y > img.height - (h / zoom) || y < h / zoom) {
+                glass.style.display = "none";
+            } else {
+                glass.style.display = "block";
+            }
+            /* Set the position of the magnifier glass: */
+            glass.style.left = (x - w) + "px";
+            glass.style.top = (y - h) + "px";
+            /* Display what the magnifier glass "sees": */
+            glass.style.backgroundPosition = "-" + ((x * zoom) - w + bw) + "px -" + ((y * zoom) - h + bw) + "px";
+        }
+        function getCursorPos(e) {
+            let x = 0, y = 0;
+            const imgRect = img.getBoundingClientRect();
+            // Get the event, considering older browsers might use `window.event`
+            e = e || window.event;
+            // Calculate the cursor's x and y coordinates, relative to the image
+            x = e.clientX - imgRect.left;
+            y = e.clientY - imgRect.top;
+            // Consider any page scrolling
+            x = x + window.scrollX;
+            y = y + window.scrollY;
+            // Return an object with the x and y coordinates
+            return { x: x, y: y };
+        }
+    }
+    magnify("image1-1", 2);
 
 </script>
 {% endblock onreadyBlock %}

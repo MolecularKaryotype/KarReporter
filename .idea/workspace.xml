@@ -7,20 +7,37 @@
     <option name="rewriteBookmarkType" value="true" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="285f2f54-1f6a-4853-85ee-05edfa06ef42" name="Changes" comment="updated readme">
-      <change afterPath="$PROJECT_DIR$/example_input/subset_test/23X_15q26_overgrowth_r1.1.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/example_input/subset_test/23X_1q21_recurrent_microduplication_r1.1.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/KarReporter.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/KarReporter.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="285f2f54-1f6a-4853-85ee-05edfa06ef42" name="Changes" comment="all images toggle work, pending update on zoom sizes">
+      <change afterPath="$PROJECT_DIR$/development/em_px_converter.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/css/font-awesome.min.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/css/karreporter.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/css/material-icons.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/css/pagination.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/fonts/Lato-Bold.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/fonts/Lato-BoldItalic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/fonts/Lato-Italic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/fonts/Lato-Light.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/fonts/Lato-LightItalic.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/fonts/Lato-Regular.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/js/jquery.bootpag.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/js/main.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/js/modernizr-3.5.0.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/js/pagination.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/simulation_report_segmentview/static/assets/placeholder/23X_1q21_recurrent_microduplication_r1_imagecluster0_rotated.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/KT_interpreter_html_report.py" beforeDir="false" afterPath="$PROJECT_DIR$/KT_interpreter_html_report.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/KT_visualizer.py" beforeDir="false" afterPath="$PROJECT_DIR$/KT_visualizer.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/KarUtils" beforeDir="false" afterPath="$PROJECT_DIR$/KarUtils" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/KarUtils/read_OMKar_output.py" beforeDir="false" afterPath="$PROJECT_DIR$/KarUtils/read_OMKar_output.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/archive/KT_interpreter_latex_report.py" beforeDir="false" afterPath="$PROJECT_DIR$/archive/KT_interpreter_latex_report.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bootstrap/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/bootstrap/dashboard.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/navigation.html" beforeDir="false" afterPath="$PROJECT_DIR$/bootstrap/navigation.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bootstrap/report.html" beforeDir="false" afterPath="$PROJECT_DIR$/bootstrap/report.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/css/karreporter.css" beforeDir="false" afterPath="$PROJECT_DIR$/bootstrap/static/assets/css/karreporter.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/css/font-awesome.min.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/css/karreporter.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/css/material-icons.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/css/pagination.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/js/jquery.bootpag.min.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/js/main.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/js/modernizr-3.5.0.min.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/bootstrap/static/assets/js/pagination.min.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/generate_content.py" beforeDir="false" afterPath="$PROJECT_DIR$/generate_content.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -54,12 +71,14 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.0820_new_visualization.executor": "Run",
+    "Python.0826_debug_double_scaling.executor": "Run",
+    "Python.em_px_converter.executor": "Run",
     "Python.generate_report.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/tingy/Zhaoyang-Repo/KarComparator",
+    "last_opened_file_path": "C:/Users/tingy/Zhaoyang-Repo/KarReporter/bootstrap/static/assets/placeholder",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -71,6 +90,8 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\tingy\Zhaoyang-Repo\KarReporter\bootstrap\static\assets\placeholder" />
+      <recent name="C:\Users\tingy\Zhaoyang-Repo\KarReporter\example_input\manuscript_files" />
       <recent name="C:\Users\tingy\Zhaoyang-Repo\KarReporter\example_input\subset_test" />
       <recent name="$PROJECT_DIR$/example_input" />
       <recent name="$PROJECT_DIR$" />
@@ -82,6 +103,9 @@
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -91,6 +115,29 @@
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/0820_new_visualization.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="0826_debug_double_scaling" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="KarReporter" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/0826_debug_double_scaling.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
@@ -112,6 +159,29 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/KT_interpreter_html_report.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="em_px_converter" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="KarReporter" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/development" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/development/em_px_converter.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -144,13 +214,17 @@
       <method v="2" />
     </configuration>
     <list>
+      <item itemvalue="Python.0826_debug_double_scaling" />
+      <item itemvalue="Python.em_px_converter" />
       <item itemvalue="Python.0820_new_visualization" />
-      <item itemvalue="Python.generate_report" />
       <item itemvalue="Python.KT_interpreter_html_report" />
+      <item itemvalue="Python.generate_report" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Python.generate_report" />
+        <item itemvalue="Python.0826_debug_double_scaling" />
+        <item itemvalue="Python.em_px_converter" />
         <item itemvalue="Python.0820_new_visualization" />
         <item itemvalue="Python.KT_interpreter_html_report" />
       </list>
@@ -175,6 +249,12 @@
       <workItem from="1720841762698" duration="5152000" />
       <workItem from="1724169737892" duration="63000" />
       <workItem from="1724169806498" duration="31064000" />
+      <workItem from="1724252074783" duration="1195000" />
+      <workItem from="1724261487739" duration="635000" />
+      <workItem from="1724352273683" duration="789000" />
+      <workItem from="1724459468736" duration="338000" />
+      <workItem from="1724461298266" duration="7536000" />
+      <workItem from="1724605206022" duration="37701000" />
     </task>
     <task id="LOCAL-00001" summary="added readme and example input files">
       <created>1720850852546</created>
@@ -190,15 +270,53 @@
       <option name="project" value="LOCAL" />
       <updated>1720851228052</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="all images toggle work, pending update on zoom sizes">
+      <option name="closed" value="true" />
+      <created>1724462596609</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1724462596609</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
+    <option name="OPEN_GENERIC_TABS">
+      <map>
+        <entry key="95abc344-bb14-4350-9a94-0a6b7f146e6a" value="TOOL_WINDOW" />
+      </map>
+    </option>
     <option name="TAB_STATES">
       <map>
+        <entry key="95abc344-bb14-4350-9a94-0a6b7f146e6a">
+          <value>
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="HEAD" />
+                      </list>
+                    </value>
+                  </entry>
+                  <entry key="structure">
+                    <value>
+                      <list>
+                        <option value="dir:C:/Users/tingy/Zhaoyang-Repo/KarReporter/example_output/example_cases" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+              <option name="SHOW_ONLY_AFFECTED_CHANGES" value="true" />
+            </State>
+          </value>
+        </entry>
         <entry key="MAIN">
           <value>
             <State />
@@ -210,7 +328,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="added readme and example input files" />
     <MESSAGE value="updated readme" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated readme" />
+    <MESSAGE value="all images toggle work, pending update on zoom sizes" />
+    <option name="LAST_COMMIT_MESSAGE" value="all images toggle work, pending update on zoom sizes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -222,15 +341,27 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/KT_interpreter_html_report.py</url>
-          <line>126</line>
+          <line>128</line>
           <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/0826_debug_double_scaling.py</url>
+          <line>12</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/KT_visualizer.py</url>
+          <line>163</line>
+          <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/KarReporter$em_px_converter.coverage" NAME="em_px_converter Coverage Results" MODIFIED="1724637175040" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/development" />
     <SUITE FILE_PATH="coverage/KarReporter$KT_interpreter_html_report.coverage" NAME="KT_interpreter_html_report Coverage Results" MODIFIED="1720847665052" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/KarReporter$0820_new_visualization.coverage" NAME="0820_new_visualization Coverage Results" MODIFIED="1724174181189" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/KarReporter$generate_report.coverage" NAME="generate_report Coverage Results" MODIFIED="1724210246784" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KarReporter$0826_debug_double_scaling.coverage" NAME="0826_debug_double_scaling Coverage Results" MODIFIED="1724684912153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/KarReporter$generate_report.coverage" NAME="generate_report Coverage Results" MODIFIED="1724700700130" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
