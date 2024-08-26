@@ -190,8 +190,8 @@
       border-radius: 50%;
       cursor: none;
       /*Set the size of the magnifier glass:*/
-      width: 3.5em;
-      height: 3.5em;
+      width: 20em;
+      height: 20em;
     }
 </style>
 </head>
@@ -201,7 +201,7 @@
 <div id="report" class="case-master-container">
     <div class="case-container">
         <div class="left-container">
-            <div class="h1-font" style="text-align:center; margin-top: 0; margin-bottom:0;">{{title}}</div>
+            <div class="h1-font" style="text-align:center; margin-top: 0; margin-bottom:0; font-weight: bold">{{title}}</div>
             <div id="report_page_top" style="text-align:center"></div>
             <div class="stacked-cluster-text-containers" style="position:relative; flex:1;">
                 {% for header, image1, image2, iscn, gene_report, debug_info in content %}
@@ -228,7 +228,7 @@
                                 <div class="table-container">
                                     <table id="gene_report" class="table table-bordered table-striped table-hover cell-border compact stripe gene_report">
                                         <thead>
-                                            <tr class="h5-font">
+                                            <tr class="h4-font">
                                                 {% for col_name in columns_order %}
                                                 <th class="dt-head{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ col_name }}</th>
                                                 {% endfor %}
@@ -236,7 +236,7 @@
                                         </thead>
                                         <tbody>
                                             {% for row in gene_report %}
-                                            <tr class="h6-font">
+                                            <tr class="h5-font">
                                                 {% for col_name in columns_order %}
                                                 <td class="dt-body{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ row[col_name] }}</td>
                                                 {% endfor %}
@@ -273,7 +273,7 @@
                                             <div class="segment-table-container">
                                                 <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
                                                     <thead>
-                                                        <tr class="h5-font">
+                                                        <tr class="h4-font">
                                                             <th class="dt-head-right">Segment</th>
                                                             <th class="dt-head-right">chr</th>
                                                             <th class="dt-head-right">start</th>
@@ -283,7 +283,7 @@
                                                     </thead>
                                                     <tbody>
                                                         {% for seg in debug_info.segs %}
-                                                        <tr class="h6-font">
+                                                        <tr class="h5-font">
                                                             <td class="dt-body-right">{{ seg[0] }}</td>
                                                             <td class="dt-body-right">{{ seg[1] }}</td>
                                                             <td class="dt-body-right">{{ seg[2] }}</td>
@@ -450,6 +450,31 @@
         }
     }
 
+    // ensures the maginifier works with scrolling and zooming
+    function getElementPosition(containerID) {
+        const container = document.getElementById(containerID);
+        if (!container) {
+            console.error("Element not found");
+            return;
+        }
+
+        // Get the bounding client rect
+        const rect = container.getBoundingClientRect();
+
+        // Extract and log the position and dimensions
+        const position = {
+            top: rect.top,
+            left: rect.left,
+            bottom: rect.bottom,
+            right: rect.right,
+            width: rect.width,
+            height: rect.height
+        };
+
+        console.log(position);
+        return position;
+    }
+
     function magnify(imgID, zoom) {
         var img, glass, w, h, bw;
         img = document.getElementById(imgID);
@@ -459,7 +484,11 @@
         glass.setAttribute("class", "img-magnifier-glass");
 
         /* Insert magnifier glass: */
-        img.parentElement.insertBefore(glass, img);
+        img.parentElement.insertBefore(glass, img);  // glass's position is defined to be relative to img (instead of viewport)
+
+        // magnifier tracking zone
+        const mousetracking = document.getElementById('report');
+        mousetracking.addEventListener('mousemove', showAndHideMagnifier);
 
         /* Set background properties for the magnifier glass: */
         glass.style.zIndex = "10";
@@ -467,7 +496,7 @@
         glass.style.backgroundRepeat = "no-repeat";
         glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
         glass.style.backgroundColor = "#f6f6fa";
-        bw = 3;
+        bw = 2;
         w = glass.offsetWidth / 2;
         h = glass.offsetHeight / 2;
 
@@ -478,35 +507,41 @@
         /*and also for touch screens:*/
         glass.addEventListener("touchmove", moveMagnifier);
         img.addEventListener("touchmove", moveMagnifier);
-        function moveMagnifier(e) {
-            var pos, x, y;
-            /* Prevent any other actions that may occur when moving over the image */
-            e.preventDefault();
-            /* Get the cursor's x and y positions: */
-            pos = getCursorPos(e);
-            x = pos.x;
-            y = pos.y;
+        function showAndHideMagnifier(e) {
+            var x, y, imgPos;
+            x = e.clientX;
+            y = e.clientY;
+            imgPos = getElementPosition(imgID);
             /* Prevent the magnifier glass from being positioned outside the image: */
-            // if (x > img.width - (w / zoom)) {x = img.width - (w / zoom);}
-            // if (x < w / zoom) {x = w / zoom;}
-            // if (y > img.height - (h / zoom)) {y = img.height - (h / zoom);}
-            // if (y < h / zoom) {y = h / zoom;}
-            if (x > img.width - (w / zoom) || x < w / zoom || y > img.height - (h / zoom) || y < h / zoom) {
+            if (x < 0 || y < 0 || x < imgPos.left || x > imgPos.right || y < imgPos.top || y > imgPos.bottom) {
                 glass.style.display = "none";
             } else {
                 glass.style.display = "block";
             }
+        }
+        function moveMagnifier(e) {
+            var x, y, imgPos;
+            /* Prevent any other actions that may occur when moving over the image */
+            e.preventDefault();
+            /* Get the cursor's x and y positions: */
+            x = e.clientX;
+            y = e.clientY;
+            imgPos = getElementPosition(imgID);
             /* Set the position of the magnifier glass: */
-            glass.style.left = (x - w) + "px";
-            glass.style.top = (y - h) + "px";
+            var x_grounded, y_grounded;
+            x_grounded = x - imgPos.left;
+            y_grounded = y - imgPos.top;
+            glass.style.left = (x_grounded - w) + "px";
+            glass.style.top = (y_grounded - h) + "px";
             /* Display what the magnifier glass "sees": */
-            glass.style.backgroundPosition = "-" + ((x * zoom) - w + bw) + "px -" + ((y * zoom) - h + bw) + "px";
+            glass.style.backgroundPosition = "-" + ((x_grounded * zoom) - w + bw) + "px -" + ((y_grounded * zoom) - h + bw) + "px";
         }
         function getCursorPos(e) {
+            // returns the relative position of the cursor on the image
             let x = 0, y = 0;
             const imgRect = img.getBoundingClientRect();
             // Get the event, considering older browsers might use `window.event`
-            e = e || window.event;
+            // e = e || window.event;
             // Calculate the cursor's x and y coordinates, relative to the image
             x = e.clientX - imgRect.left;
             y = e.clientY - imgRect.top;
@@ -517,7 +552,11 @@
             return { x: x, y: y };
         }
     }
-    magnify("image1-1", 2);
+    const zoom = 2;
+    for (var i = 1; i <= {{content|length}}; i++) {
+        magnify("image1-" + i, zoom);
+        magnify("image2-" + i, zoom);
+    }
 
 </script>
 {% endblock onreadyBlock %}
