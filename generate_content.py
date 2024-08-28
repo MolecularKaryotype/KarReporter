@@ -18,12 +18,14 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
     iscn_events = []
     gene_reports = []
     event_type_reports = {
-        "deletion" :0,
+        "deletion":0,
         "inversion":0,
         "tandem_duplication":0,
         "left_duplication_inversion":0,
         "right_duplication_inversion":0,
-        "insertion":0
+        "insertion":0,
+        'nonreciprocal_translocation':0,
+        'reciprocal_translocation':0
     }
     associated_event_already_reported = []
     for event in interpreted_events:
@@ -171,6 +173,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 # continue
                 raise RuntimeError('event not in allowed list')
         elif event_type.startswith("balanced_translocation_associated"):
+            event_type_reports['reciprocal_translocation'] += 1
             # TODO: only works with 2-break reciprocal balanced translocation
             o_event_id = int(event_type.split('<')[1].split('>')[0])
             # get extract the other event
@@ -275,6 +278,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                                                                                      (chr1, seg1_left_bp), (chr1, seg1_right_bp)])
             associated_event_already_reported.append(o_event_id)
         elif event_type.startswith("balanced_translocation_unassociated"):
+            event_type_reports['nonreciprocal_translocation'] += 1
             event_info = event[2]
             if event_info[0].split('.')[2].startswith('mt'):
                 del_idx = 0
@@ -486,14 +490,14 @@ def parse_event_multiplicities(dict_list):
                 combined_dict[key] += value
 
     # sort dictionary in correct event order, and return complexity
-    event_order = ['balanced_reciprocal_translocation',
+    event_order = ['reciprocal_translocation',
                    'nonreciprocal_translocation',
                    'duplication_inversion',
                    'inversion',
                    'duplicated_insertion',
                    'tandem_duplication',
                    'deletion']
-    complexity_mapping = {'balanced_reciprocal_translocation': 2,
+    complexity_mapping = {'reciprocal_translocation': 2,
                           'nonreciprocal_translocation': 3,
                           'duplication_inversion': 2,
                           'inversion': 2,
