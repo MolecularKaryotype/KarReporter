@@ -84,6 +84,8 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
                                                                                                                        file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
     images1_base64 = [image_to_base64(img) for img in image1_paths]
     images2_base64 = [image_to_base64(img) for img in image2_paths]
+    with open("bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
+        magnifying_glass_icon = fp_read.readline().strip()
 
     formatted_genes_reports = [format_genes_report(genes_report) for genes_report in genes_reports]
     columns_order = ['SV', 'gene name', 'gene omim', 'rationale']
@@ -138,7 +140,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         
         filtered_content = [(header, image1, image2, iscn, gene_report, debug_info) for header, image1, image2, iscn, gene_report, debug_info in
                zip(filtered_headers, filtered_images1, filtered_images2, filtered_iscn, filtered_gene_reports, filtered_debug)]
-        filtered_report = reporttemplate.render(title=report_title, content=filtered_content, columns_order=columns_order, debug=debug)
+        filtered_report = reporttemplate.render(title=report_title, content=filtered_content, columns_order=columns_order, debug=debug, mag_icon=magnifying_glass_icon)
         with open(output_dir+"/"+report_title+".html", 'w') as f:
             f.write(filtered_report)
 
