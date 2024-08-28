@@ -348,7 +348,7 @@
         <div class="spacer-container"></div>
         <div class="right-container">
             <div class="toggle-container">
-                <p class="h5-font" style="margin:0  ">Show Segment-View</p>
+                <p class="h5-font" style="margin:0" id="sliderLabel">Show Segment-View</p>
                 <label class="switch" style="flex:1; max-width:4.62em; margin-left:0.7em">
                     <input type="checkbox" id="toggleSlider" onclick="toggleImage()">
                     <span class="slider"></span>
@@ -359,7 +359,7 @@
                     {% set cluster_id = loop.index %}
                     <div class="cluster-image-container" id="cluster-image-{{ cluster_id }}">
                         <img id="image1-{{ cluster_id }}" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid image1 background-shading img-magnifier-container" style="display:block; z-index:5">
-                        <img id="image2-{{ cluster_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading" style="display:none; z-index:5">
+                        <img id="image2-{{ cluster_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading" style="display:block; z-index:5">
                     </div>
                 {% endfor %}
             </div>
@@ -376,6 +376,8 @@
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         const aspectRatio = viewportWidth / viewportHeight;
+        console.log("viewportWidth: ", viewportWidth);
+        console.log("viewportHeight: ", viewportHeight);
 
         if (viewportWidth >= 1280) {
             // Calculate width based on aspect ratio
@@ -391,13 +393,29 @@
     }
     updateMaxWidth();
     window.addEventListener('resize', updateMaxWidth);
-
+    const zoom = 2;
+    const magnifierSize = 0.65;
+    const magnifierBorder = magnifierSize * 0.02;
+    const caseMasterContainer = document.getElementById("report");
+    caseMasterContainer.style.marginBottom = (magnifierSize + 0.1) * 0.5 * 0.19 * window.innerWidth + "px";
+    for (let i = 1; i <= {{content|length}}; i++) {
+        magnify("image1-" + i, zoom);
+        magnify("image2-" + i, zoom);
+    };
+    document.querySelectorAll('.mag2').forEach(magItr => {
+        magItr.style.display = 'none';
+    });
+    document.querySelectorAll('.image2').forEach(imageItr => {
+        imageItr.style.display = 'none';
+    });
     $(document).ready(function () {
         $(".cluster-text-container").hide()
         $(".cluster-image-container").hide()
-        var displayIDs = []
+        $(".mag1").hide()
+        $(".mag2").hide()
+        let displayIDs = []
 
-        for (var i = 1; i <= {{content|length}}; i++) {
+        for (let i = 1; i <= {{content|length}}; i++) {
             displayIDs.push({
                 text: $("#cluster-text-" + i),
                 image: $("#cluster-image-" + i)
@@ -412,36 +430,54 @@
             callback: function(data, pagination) {
                 $(".cluster-image-container").hide()
                 $(".cluster-text-container").hide()
+                $(".mag1").hide()
+                $(".mag2").hide()
                 data[0].text.show()
                 data[0].image.show()
+                const clusterImageID = data[0].image[0].id;
+                const mag1 = document.getElementById(clusterImageID.replace('cluster-image', 'mag1'));
+                const mag2 = document.getElementById(clusterImageID.replace('cluster-image', 'mag2'));
+                const label = document.getElementById("sliderLabel");
+                if (label.textContent === "Show Segment-View") {
+                    mag1.style.display = 'block';
+                } else {
+                    mag2.style.display = 'block';
+                }
+                resizeGlassBackground();
             }
         });
     })
-
     function toggleImage() {
         // Get all elements with class 'image1' and 'image2'
         const images1 = document.querySelectorAll('.image1');
         const images2 = document.querySelectorAll('.image2');
 
         // Toggle display for all 'image1' elements
-        images1.forEach(image => {
-            if (image.style.display === 'none') {
-                image.style.display = 'block';
+        images1.forEach(imageItr => {
+            const mag1 = document.getElementById(imageItr.id.replace('image1', 'mag1'))
+            if (imageItr.style.display === 'none') {
+                imageItr.style.display = 'block';
+                mag1.style.display = 'block';
             } else {
-                image.style.display = 'none';
+                imageItr.style.display = 'none';
+                mag1.style.display = 'none';
             }
         });
 
         // Toggle display for all 'image2' elements
-        images2.forEach(image => {
-            if (image.style.display === 'none') {
-                image.style.display = 'block';
+        images2.forEach(imageItr => {
+            const mag2 = document.getElementById(imageItr.id.replace('image2', 'mag2'))
+            if (imageItr.style.display === 'none') {
+                imageItr.style.display = 'block';
+                mag2.style.display = 'block';
             } else {
-                image.style.display = 'none';
+                imageItr.style.display = 'none';
+                mag2.style.display = 'none';
             }
         });
+        resizeGlassBackground();
 
-        var label = document.getElementById("sliderLabel");
+        let label = document.getElementById("sliderLabel");
         if (label.textContent === "Show Segment-View") {
             label.textContent = "Show Cytoband-View";
         } else {
@@ -470,21 +506,22 @@
         // console.log(position);
         return position;
     }
-
-    function magnify(imgID, zoom) {
-        var img, glass, w, h, bw;
+    function magnify(imgID) {
+        let img, glass, w, h;
         img = document.getElementById(imgID);
 
         /* Create magnifier glass: */
         glass = document.createElement("DIV");
-        glass.setAttribute("class", "img-magnifier-glass");
+        if (imgID.startsWith("image1")) {
+            glass.setAttribute("class", "img-magnifier-glass mag1");
+            glass.setAttribute("id", imgID.replace('image1', 'mag1'));
+        } else if (imgID.startsWith("image2")) {
+            glass.setAttribute("class", "img-magnifier-glass mag2");
+            glass.setAttribute("id", imgID.replace('image2', 'mag2'));
+        }
 
         /* Insert magnifier glass: */
-        img.parentElement.insertBefore(glass, img);  // glass's position is defined to be relative to img (instead of viewport)
-
-        // magnifier tracking zone
-        // const mousetracking = document.getElementById('report');
-        // mousetracking.addEventListener('mousemove', showAndHideMagnifier);
+        img.parentElement.insertBefore(glass, img);  // glass's position is defined to be relative to img-container (instead of viewport)
 
         /* Set background properties for the magnifier glass: */
         glass.style.zIndex = "10";
@@ -492,42 +529,40 @@
         glass.style.backgroundRepeat = "no-repeat";
         glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
         glass.style.backgroundColor = "#f6f6fa";
-        glass.style.width = (img.width * 0.5) + "px";
-        glass.style.height = (img.width * 0.5) + "px";
-        glass.style.border = (img.width * 0.01) + "px solid #000";
-        bw = 2;
+        glass.style.width = (img.width * magnifierSize) + "px";
+        glass.style.height = (img.width * magnifierSize) + "px";
+        glass.style.border = (img.width * magnifierBorder) + "px solid #000";
         w = glass.offsetWidth / 2;
         h = glass.offsetHeight / 2;
 
         /* Execute a function when someone moves the magnifier glass over the image: */
+        window.addEventListener('mousemove', showAndHideMagnifier);
         glass.addEventListener("mousemove", moveMagnifier);
         img.addEventListener("mousemove", moveMagnifier);
-        window.addEventListener("resize", resizeGlassBackground);  // ensure mag works with page-zooming
+        window.addEventListener("resize", resizeGlassBackground);  // ensure mag works with page-zooming\
 
         /*and also for touch screens:*/
         // glass.addEventListener("touchmove", moveMagnifier);
         // img.addEventListener("touchmove", moveMagnifier);
-        function resizeGlassBackground() {
-            const imgPos = getElementPosition(imgID);
-            glass.style.backgroundSize = (imgPos.width * zoom) + "px " + (imgPos.height * zoom) + "px";
-            glass.style.width = (img.width * 0.5) + "px";
-            glass.style.height = (img.width * 0.5) + "px";
-            glass.style.border = (img.width * 0.01) + "px solid #000";
-        }
+
         function showAndHideMagnifier(e) {
-            var x, y, imgPos;
+            let x, y, imgPos;
             x = e.clientX;
             y = e.clientY;
             imgPos = getElementPosition(imgID);
+            const boundaryOffset = magnifierSize / zoom;  // prevent glass freezing near boundary
             /* Prevent the magnifier glass from being positioned outside the image: */
-            if (x < 0 || y < 0 || x < imgPos.left || x > imgPos.right || y < imgPos.top || y > imgPos.bottom) {
+            if (x < 0 || y < 0 || x < imgPos.left + boundaryOffset || x > imgPos.right - boundaryOffset || y < imgPos.top + boundaryOffset || y > imgPos.bottom - boundaryOffset) {
                 glass.style.display = "none";
+                img.style.cursor = 'default';
             } else {
                 glass.style.display = "block";
+                img.style.cursor = 'none';
             }
         }
+
         function moveMagnifier(e) {
-            var x, y, imgPos;
+            let x, y, imgPos;
             /* Prevent any other actions that may occur when moving over the image */
             e.preventDefault();
             /* Get the cursor's x and y positions: */
@@ -535,34 +570,52 @@
             y = e.clientY;
             imgPos = getElementPosition(imgID);
             /* Set the position of the magnifier glass: */
-            var x_grounded, y_grounded;
+            let x_grounded, y_grounded;
             x_grounded = x - imgPos.left;
             y_grounded = y - imgPos.top;
             glass.style.left = (x_grounded - w) + "px";
             glass.style.top = (y_grounded - h) + "px";
             /* Display what the magnifier glass "sees": */
-            glass.style.backgroundPosition = "-" + ((x_grounded * zoom) - w + bw) + "px -" + ((y_grounded * zoom) - h + bw) + "px";
+            let backgroundX = Math.max(0, (x_grounded * zoom) - w);
+            let backgroundY = Math.max(0, (y_grounded * zoom) - w);
+            glass.style.backgroundPosition = "-" + backgroundX + "px -" + backgroundY + "px";
         }
-        // function getCursorPos(e) {
-        //     // returns the relative position of the cursor on the image
-        //     let x = 0, y = 0;
-        //     const imgRect = img.getBoundingClientRect();
-        //     // Get the event, considering older browsers might use `window.event`
-        //     // e = e || window.event;
-        //     // Calculate the cursor's x and y coordinates, relative to the image
-        //     x = e.clientX - imgRect.left;
-        //     y = e.clientY - imgRect.top;
-        //     // Consider any page scrolling
-        //     x = x + window.scrollX;
-        //     y = y + window.scrollY;
-        //     // Return an object with the x and y coordinates
-        //     return { x: x, y: y };
-        // }
     }
-    const zoom = 2;
-    for (var i = 1; i <= {{content|length}}; i++) {
-        magnify("image1-" + i, zoom);
-        magnify("image2-" + i, zoom);
+    function resizeGlassBackground() {
+        const maxImgPos = getShownImageSizes();
+        // console.log(maxImgPos);
+        document.querySelectorAll('.mag1').forEach(glassItr => {
+            glassItr.style.backgroundSize = ((maxImgPos.width) * zoom) + "px " + (maxImgPos.height * zoom) + "px";
+            glassItr.style.width = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.height = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.border = (maxImgPos.width * magnifierBorder) + "px solid #000";
+        });
+        document.querySelectorAll('.mag2').forEach(glassItr => {
+            glassItr.style.backgroundSize = (maxImgPos.width * zoom) + "px " + (maxImgPos.height * zoom) + "px";
+            glassItr.style.width = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.height = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.border = (maxImgPos.width * magnifierBorder) + "px solid #000";
+        });
+        caseMasterContainer.style.marginBottom = (magnifierSize + 0.1) * 0.5 * 0.19 * window.innerWidth + "px";
+    }
+    function getShownImageSizes() {
+        let maxWidth = 0;
+        let maxImgPos = null;
+        document.querySelectorAll('.image1').forEach(imageItr => {
+            const imgPos = getElementPosition(imageItr.id)
+            if (imgPos.width > maxWidth) {
+                maxWidth = imgPos.width;
+                maxImgPos = imgPos;
+            }
+        });
+        document.querySelectorAll('.image2').forEach(imageItr => {
+            const imgPos = getElementPosition(imageItr.id)
+            if (imgPos.width > maxWidth) {
+                maxWidth = imgPos.width;
+                maxImgPos = imgPos;
+            }
+        });
+        return maxImgPos;
     }
 
 </script>
