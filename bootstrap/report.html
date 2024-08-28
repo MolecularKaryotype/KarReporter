@@ -6,36 +6,38 @@
 
 {% block content %}
 
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=0.8">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
     /*fonts*/
-    @font-face {
-        font-family: 'Lato';
-        src: url('assets/fonts/Lato-Regular.ttf') format('truetype');
-        font-weight: 400;
-        font-style: normal;
-    }
-    @font-face {
-        font-family: 'Lato';
-        src: url('assets/fonts/Lato-Italic.ttf') format('truetype');
-        font-weight: 400;
-        font-style: italic;
-    }
-    @font-face {
-        font-family: 'Lato';
-        src: url('assets/fonts/Lato-Bold.ttf') format('truetype');
-        font-weight: 700;
-        font-style: normal;
-    }
-    @font-face {
-        font-family: 'Lato';
-        src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');
-        font-weight: 700;
-        font-style: italic;
-    }
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Regular.ttf') format('truetype');*/
+    /*    font-weight: 400;*/
+    /*    font-style: normal;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Italic.ttf') format('truetype');*/
+    /*    font-weight: 400;*/
+    /*    font-style: italic;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Bold.ttf') format('truetype');*/
+    /*    font-weight: 700;*/
+    /*    font-style: normal;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');*/
+    /*    font-weight: 700;*/
+    /*    font-style: italic;*/
+    /*}*/
 
     body {
         font-size: 14.4px;
@@ -186,12 +188,9 @@
 
     .img-magnifier-glass {
       position: absolute;
-      border: 0.2em solid #000;
       border-radius: 50%;
       cursor: none;
-      /*Set the size of the magnifier glass:*/
-      width: 20em;
-      height: 20em;
+      /*magnifier glass size is defined dynamically*/
     }
 </style>
 </head>
@@ -381,9 +380,9 @@
         if (viewportWidth >= 1280) {
             // Calculate width based on aspect ratio
             const maxWidth = Math.min(viewportWidth, (1.45 / aspectRatio) * viewportWidth);
-            console.log('Viewport Width:', viewportWidth);
-            console.log('Aspect Ratio:', aspectRatio);
-            console.log('Calculated Width:', maxWidth + 'px');
+            // console.log('Viewport Width:', viewportWidth);
+            // console.log('Aspect Ratio:', aspectRatio);
+            // console.log('Calculated Width:', maxWidth + 'px');
             container.style.width = maxWidth + 'px';
         } else {
             // Full width for smaller screens
@@ -457,10 +456,8 @@
             console.error("Element not found");
             return;
         }
-
         // Get the bounding client rect
         const rect = container.getBoundingClientRect();
-
         // Extract and log the position and dimensions
         const position = {
             top: rect.top,
@@ -470,8 +467,7 @@
             width: rect.width,
             height: rect.height
         };
-
-        console.log(position);
+        // console.log(position);
         return position;
     }
 
@@ -487,8 +483,8 @@
         img.parentElement.insertBefore(glass, img);  // glass's position is defined to be relative to img (instead of viewport)
 
         // magnifier tracking zone
-        const mousetracking = document.getElementById('report');
-        mousetracking.addEventListener('mousemove', showAndHideMagnifier);
+        // const mousetracking = document.getElementById('report');
+        // mousetracking.addEventListener('mousemove', showAndHideMagnifier);
 
         /* Set background properties for the magnifier glass: */
         glass.style.zIndex = "10";
@@ -496,6 +492,9 @@
         glass.style.backgroundRepeat = "no-repeat";
         glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
         glass.style.backgroundColor = "#f6f6fa";
+        glass.style.width = (img.width * 0.5) + "px";
+        glass.style.height = (img.width * 0.5) + "px";
+        glass.style.border = (img.width * 0.01) + "px solid #000";
         bw = 2;
         w = glass.offsetWidth / 2;
         h = glass.offsetHeight / 2;
@@ -503,10 +502,18 @@
         /* Execute a function when someone moves the magnifier glass over the image: */
         glass.addEventListener("mousemove", moveMagnifier);
         img.addEventListener("mousemove", moveMagnifier);
+        window.addEventListener("resize", resizeGlassBackground);  // ensure mag works with page-zooming
 
         /*and also for touch screens:*/
-        glass.addEventListener("touchmove", moveMagnifier);
-        img.addEventListener("touchmove", moveMagnifier);
+        // glass.addEventListener("touchmove", moveMagnifier);
+        // img.addEventListener("touchmove", moveMagnifier);
+        function resizeGlassBackground() {
+            const imgPos = getElementPosition(imgID);
+            glass.style.backgroundSize = (imgPos.width * zoom) + "px " + (imgPos.height * zoom) + "px";
+            glass.style.width = (img.width * 0.5) + "px";
+            glass.style.height = (img.width * 0.5) + "px";
+            glass.style.border = (img.width * 0.01) + "px solid #000";
+        }
         function showAndHideMagnifier(e) {
             var x, y, imgPos;
             x = e.clientX;
@@ -536,21 +543,21 @@
             /* Display what the magnifier glass "sees": */
             glass.style.backgroundPosition = "-" + ((x_grounded * zoom) - w + bw) + "px -" + ((y_grounded * zoom) - h + bw) + "px";
         }
-        function getCursorPos(e) {
-            // returns the relative position of the cursor on the image
-            let x = 0, y = 0;
-            const imgRect = img.getBoundingClientRect();
-            // Get the event, considering older browsers might use `window.event`
-            // e = e || window.event;
-            // Calculate the cursor's x and y coordinates, relative to the image
-            x = e.clientX - imgRect.left;
-            y = e.clientY - imgRect.top;
-            // Consider any page scrolling
-            x = x + window.scrollX;
-            y = y + window.scrollY;
-            // Return an object with the x and y coordinates
-            return { x: x, y: y };
-        }
+        // function getCursorPos(e) {
+        //     // returns the relative position of the cursor on the image
+        //     let x = 0, y = 0;
+        //     const imgRect = img.getBoundingClientRect();
+        //     // Get the event, considering older browsers might use `window.event`
+        //     // e = e || window.event;
+        //     // Calculate the cursor's x and y coordinates, relative to the image
+        //     x = e.clientX - imgRect.left;
+        //     y = e.clientY - imgRect.top;
+        //     // Consider any page scrolling
+        //     x = x + window.scrollX;
+        //     y = y + window.scrollY;
+        //     // Return an object with the x and y coordinates
+        //     return { x: x, y: y };
+        // }
     }
     const zoom = 2;
     for (var i = 1; i <= {{content|length}}; i++) {
