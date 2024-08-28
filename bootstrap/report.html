@@ -507,7 +507,7 @@
         return position;
     }
     function magnify(imgID) {
-        let img, glass, w, h;
+        let img, glass;
         img = document.getElementById(imgID);
 
         /* Create magnifier glass: */
@@ -532,8 +532,6 @@
         glass.style.width = (img.width * magnifierSize) + "px";
         glass.style.height = (img.width * magnifierSize) + "px";
         glass.style.border = (img.width * magnifierBorder) + "px solid #000";
-        w = glass.offsetWidth / 2;
-        h = glass.offsetHeight / 2;
 
         /* Execute a function when someone moves the magnifier glass over the image: */
         window.addEventListener('mousemove', showAndHideMagnifier);
@@ -560,24 +558,27 @@
                 img.style.cursor = 'none';
             }
         }
-
         function moveMagnifier(e) {
-            let x, y, imgPos;
+            let x, y, imgPos, magOffset;
             /* Prevent any other actions that may occur when moving over the image */
             e.preventDefault();
             /* Get the cursor's x and y positions: */
             x = e.clientX;
             y = e.clientY;
+            magOffset = glass.offsetWidth / 2;
             imgPos = getElementPosition(imgID);
             /* Set the position of the magnifier glass: */
             let x_grounded, y_grounded;
             x_grounded = x - imgPos.left;
             y_grounded = y - imgPos.top;
-            glass.style.left = (x_grounded - w) + "px";
-            glass.style.top = (y_grounded - h) + "px";
+            console.log("x_grounded: ", x_grounded);
+            console.log("y_grounded: ", y_grounded);
+            console.log("magOffset: ", magOffset);
+            glass.style.left = (x_grounded - magOffset) + "px";
+            glass.style.top = (y_grounded - magOffset) + "px";
             /* Display what the magnifier glass "sees": */
-            let backgroundX = Math.max(0, (x_grounded * zoom) - w);
-            let backgroundY = Math.max(0, (y_grounded * zoom) - w);
+            let backgroundX = Math.max(0, (x_grounded * zoom) - magOffset);
+            let backgroundY = Math.max(0, (y_grounded * zoom) - magOffset);
             glass.style.backgroundPosition = "-" + backgroundX + "px -" + backgroundY + "px";
         }
     }
