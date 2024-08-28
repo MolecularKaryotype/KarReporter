@@ -434,15 +434,15 @@
                 $(".mag2").hide()
                 data[0].text.show()
                 data[0].image.show()
-                const clusterImageID = data[0].image[0].id;
-                const mag1 = document.getElementById(clusterImageID.replace('cluster-image', 'mag1'));
-                const mag2 = document.getElementById(clusterImageID.replace('cluster-image', 'mag2'));
-                const label = document.getElementById("sliderLabel");
-                if (label.textContent === "Show Segment-View") {
-                    mag1.style.display = 'block';
-                } else {
-                    mag2.style.display = 'block';
-                }
+                // const clusterImageID = data[0].image[0].id;
+                // const mag1 = document.getElementById(clusterImageID.replace('cluster-image', 'mag1'));
+                // const mag2 = document.getElementById(clusterImageID.replace('cluster-image', 'mag2'));
+                // const label = document.getElementById("sliderLabel");
+                // if (label.textContent === "Show Segment-View") {
+                //     mag1.style.display = 'block';
+                // } else {
+                //     mag2.style.display = 'block';
+                // }
                 resizeGlassBackground();
             }
         });
@@ -454,25 +454,25 @@
 
         // Toggle display for all 'image1' elements
         images1.forEach(imageItr => {
-            const mag1 = document.getElementById(imageItr.id.replace('image1', 'mag1'))
+            // const mag1 = document.getElementById(imageItr.id.replace('image1', 'mag1'))
             if (imageItr.style.display === 'none') {
                 imageItr.style.display = 'block';
-                mag1.style.display = 'block';
+                // mag1.style.display = 'block';
             } else {
                 imageItr.style.display = 'none';
-                mag1.style.display = 'none';
+                // mag1.style.display = 'none';
             }
         });
 
         // Toggle display for all 'image2' elements
         images2.forEach(imageItr => {
-            const mag2 = document.getElementById(imageItr.id.replace('image2', 'mag2'))
+            // const mag2 = document.getElementById(imageItr.id.replace('image2', 'mag2'))
             if (imageItr.style.display === 'none') {
                 imageItr.style.display = 'block';
-                mag2.style.display = 'block';
+                // mag2.style.display = 'block';
             } else {
                 imageItr.style.display = 'none';
-                mag2.style.display = 'none';
+                // mag2.style.display = 'none';
             }
         });
         resizeGlassBackground();
@@ -524,6 +524,7 @@
         img.parentElement.insertBefore(glass, img);  // glass's position is defined to be relative to img-container (instead of viewport)
 
         /* Set background properties for the magnifier glass: */
+        glass.style.display = "none";
         glass.style.zIndex = "10";
         glass.style.backgroundImage = "url('" + img.src + "')";
         glass.style.backgroundRepeat = "no-repeat";
