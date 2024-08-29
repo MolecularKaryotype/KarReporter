@@ -80,10 +80,20 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     os.makedirs(image_output_dir, exist_ok=True)
 
     # one tuple per cluster (event)
-    filenames, clusters, headers, cases_with_events, image1_paths, image2_paths, iscn_reports, genes_reports, case_event_type_reports, case_complexities, debug_outputs = batch_populate_html_contents(data_dir, image_output_dir,
-                                                                                                                       file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
+    (filenames, clusters, headers, cases_with_events,
+     image1_paths, image2_paths,
+     iscn_reports, genes_reports,
+     case_event_type_reports, case_complexities, summary_image_paths, summary_preview_image_paths,
+     debug_outputs) = batch_populate_html_contents(data_dir, image_output_dir, file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
     images1_base64 = [image_to_base64(img) for img in image1_paths]
     images2_base64 = [image_to_base64(img) for img in image2_paths]
+    os.makedirs(output_dir + "/karyotypes/", exist_ok=True)
+    for img in summary_image_paths:
+        shutil.copy(img, output_dir + "/karyotypes/")
+    for img in summary_preview_image_paths:
+        shutil.copy(img, output_dir + "/karyotypes/")
+    summary_image_names = [img.split('/')[-1] for img in summary_image_paths]
+    summary_preview_image_names = [img.split('/')[-1] for img in summary_preview_image_paths]
     with open("bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
         magnifying_glass_icon = fp_read.readline().strip()
 
@@ -96,18 +106,18 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
             hyperlinked_sv_interpretation = hyperlink_iscn_interpretation(sv_interpretation)
             iscn_report[iscn_report_idx][1] = hyperlinked_sv_interpretation
 
-    # for old report
-    content = [(header, text, image, table_content, debug_info) for header, text, image, table_content, debug_info in
-               zip(headers, iscn_reports, images1_base64, formatted_genes_reports, debug_outputs)]
-    env = Environment(loader=FileSystemLoader('./'))
-    template = env.get_template('template.html')
-    rendered_html = template.render(title=title, content=content, columns_order=columns_order, debug=debug)
-
-    dashboard = [(filename, cluster, case_event_type_report, case_complexity) for filename, cluster, case_event_type_report, case_complexity in
-               zip(filenames, clusters, case_event_type_reports, case_complexities)]
+    ## for old report
+    # content = [(header, text, image, table_content, debug_info) for header, text, image, table_content, debug_info in
+    #            zip(headers, iscn_reports, images1_base64, formatted_genes_reports, debug_outputs)]
+    # env = Environment(loader=FileSystemLoader('./'))
+    # template = env.get_template('template.html')
+    # rendered_html = template.render(title=title, content=content, columns_order=columns_order, debug=debug)
+    dashboard = [(filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image)
+                 for filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image in
+                 zip(filenames, clusters, case_event_type_reports, case_complexities, summary_image_names, summary_preview_image_names)]
     env1 = Environment(loader=FileSystemLoader('./bootstrap'))
     newtemplate = env1.get_template('dashboard.html')
-    newrendered_html = newtemplate.render(title=title, content=dashboard, columns_order=columns_order, debug=debug)
+    newrendered_html = newtemplate.render(title=title, content=dashboard, debug=debug)
 
     #create output folder if it does not exist
     if not os.path.exists(output_dir):
@@ -121,12 +131,13 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     with open(output_dir+"/"+"dashboard.html", 'w') as f:
         f.write(newrendered_html)
 
-    with open(output_dir+"/oldreport.html", 'w') as f:
-        f.write(rendered_html)
+    # with open(output_dir+"/oldreport.html", 'w') as f:
+    #     f.write(rendered_html)
 
     start = 0
     index = 0
     reporttemplate = env1.get_template('report.html')
+    # os.makedirs(output_dir+"/cases_html", exist_ok=True)
     for cluster in clusters:
         filtered_headers = headers[start:start+cluster]
         filtered_images1 = images1_base64[start:start+cluster]
@@ -141,7 +152,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         filtered_content = [(header, image1, image2, iscn, gene_report, debug_info) for header, image1, image2, iscn, gene_report, debug_info in
                zip(filtered_headers, filtered_images1, filtered_images2, filtered_iscn, filtered_gene_reports, filtered_debug)]
         filtered_report = reporttemplate.render(title=report_title, content=filtered_content, columns_order=columns_order, debug=debug, mag_icon=magnifying_glass_icon)
-        with open(output_dir+"/"+report_title+".html", 'w') as f:
+        with open(f"{output_dir}/{report_title}.html", 'w') as f:
             f.write(filtered_report)
 
     print(f"HTML file generated")
