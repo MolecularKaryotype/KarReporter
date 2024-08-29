@@ -138,7 +138,18 @@ chr_color_mapping = {
 reduced_saturation_mapping = {k: reduce_saturation(v, BAND_SATURATION) for k, v in color_mapping.items()}
 
 
-def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling):
+def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_show_event_number=True, max_label_each_line=MAX_LABEL_EACH_LINE, **kwargs):
+    ## overwrite variables
+    global CHR_HEADER_HIGHLIGHT_FONTSIZE, CHR_HEADER_FONTSIZE, CHR_HEADER_Y_OFFSET, CHR_HEADER_HIGHLIGHT_Y_OFFSET
+    if 'CHR_HEADER_HIGHLIGHT_FONTSIZE' in kwargs:
+        CHR_HEADER_HIGHLIGHT_FONTSIZE = kwargs['CHR_HEADER_HIGHLIGHT_FONTSIZE']
+    if 'CHR_HEADER_FONTSIZE' in kwargs:
+        CHR_HEADER_FONTSIZE = kwargs['CHR_HEADER_FONTSIZE']
+    if 'CHR_HEADER_Y_OFFSET' in kwargs:
+        CHR_HEADER_Y_OFFSET = kwargs['CHR_HEADER_Y_OFFSET']
+    if 'CHR_HEADER_HIGHLIGHT_Y_OFFSET' in kwargs:
+        CHR_HEADER_HIGHLIGHT_Y_OFFSET = kwargs['CHR_HEADER_HIGHLIGHT_Y_OFFSET']
+
     ## Chrom header
     ax.text(x_offset, y_offset + CHR_HEADER_Y_OFFSET, chromosome_data['name'],
             va='bottom', fontsize=CHR_HEADER_FONTSIZE, rotation=90, weight='bold')
@@ -237,8 +248,11 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling):
         ## format label-text
         labels = []
         for label_idx, label_itr in enumerate(sv_label['label']):
-            label_header = label_itr.split(']')[0] + ']'
-            if label_idx != len(sv_label['label']) - 1 and (label_idx + 1) % MAX_LABEL_EACH_LINE == 0:
+            if only_show_event_number:
+                label_header = label_itr.split(']')[0] + ']'
+            else:
+                label_header = f"[{label_itr.split(']')[1]}]"
+            if label_idx != len(sv_label['label']) - 1 and (label_idx + 1) % max_label_each_line == 0:
                 label_header += '\n'
             labels.append(label_header)
         label = ''.join(labels)
@@ -397,9 +411,9 @@ def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict):
                          'deletion': 'DEL',
                          'inversion': 'INV',
                          'tandem_duplication': 'DUP',
-                         'left_duplication_inversion': "DUPINV",
-                         'right_duplication_inversion': 'DUPINV',
-                         'balanced_translocation': 'TRANS'}
+                         'left_duplication_inversion': "DUPI",
+                         'right_duplication_inversion': 'DUPI',
+                         'balanced_translocation': 'T'}
 
     def find_and_assign_single_label(path_id, indexed_seg, label_str):
         path_found = False
@@ -697,7 +711,7 @@ def test_artificial_chr_image():
     for chrom_idx, i_chromosome_data in enumerate(chromosomes_data):
         row = chrom_idx // 4
         col = chrom_idx % 4
-        plot_chromosome(i_ax, i_chromosome_data, y_offset=col * 3, x_offset=row * 28)
+        plot_chromosome(i_ax, i_chromosome_data, col * 3, row * 28, 1.0, only_show_event_number=False)
 
     # plt.show(bbox_inches='tight')
     plt.savefig('test_fig.png', bbox_inches='tight')
@@ -772,11 +786,100 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
     for chrom_idx, i_chromosome_data in enumerate(vis_input):
         row = chrom_idx // 4
         col = chrom_idx % 4
-        plot_chromosome(i_ax, i_chromosome_data, Y_INIT + col * Y_CONST, row * 28, chr_len_scaling)
+        plot_chromosome(i_ax, i_chromosome_data, Y_INIT + col * Y_CONST, row * 28, chr_len_scaling,
+                        CHR_HEADER_HIGHLIGHT_FONTSIZE=12,
+                        CHR_HEADER_FONTSIZE=7,
+                        CHR_HEADER_Y_OFFSET=1.8,
+                        CHR_HEADER_HIGHLIGHT_Y_OFFSET=1.15)
 
-    plt.savefig(output_prefix + '.png', bbox_inches='tight', dpi=300, transparent=True)
+    plt.savefig(output_prefix + '.png', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
     plt.close()
     rotate_image(output_prefix + '.png', output_prefix + '_rotated.png')
+
+def make_summary_image(file_header, vis_input, output_prefix):
+    plt.rcParams['figure.dpi'] = 300
+    MAX_CHR_PER_ROW = 24
+    ## overwrites ##
+    CHR_HEADER_HIGHLIGHT_FONTSIZE = 18
+    CHR_HEADER_FONTSIZE = 11
+    WHOLE_CHR_Y_OFFSET = 2
+    CHR_HEADER_Y_OFFSET = -0.4 + WHOLE_CHR_Y_OFFSET
+    CHR_HEADER_HIGHLIGHT_Y_OFFSET = -1.2 + WHOLE_CHR_Y_OFFSET
+    ################
+    Y_CONST = 5.5  # adjust the distance between chromosomes
+    n_chrom = len(vis_input)
+    current_chr_idx = 0
+    current_fig_idx = 0
+    while current_chr_idx < n_chrom:
+        ## no scaling for the summary view, and all chromosomes are on the same relative scale
+        current_vis_input = [vis_input[i] for i in range(current_chr_idx, min(current_chr_idx + MAX_CHR_PER_ROW, n_chrom))]
+        current_chr_length = max_chr_length(current_vis_input)
+        if current_fig_idx == 0:
+            img_x = (current_chr_length / 200) * 8 * IMG_LENGTH_SCALE_VERTICAL_SPLIT + 0.72  # for file_header
+        else:
+            img_x = (current_chr_length / 200) * 8 * IMG_LENGTH_SCALE_VERTICAL_SPLIT
+        img_y = MAX_CHR_PER_ROW * (Y_CONST / 4)
+        fig, i_ax = plt.subplots(figsize=(img_x, img_y))  # set up image aspect ratio
+        for vis in current_vis_input:
+            merge_sv_labels(vis, SV_LABEL_MIN_DISTANCE)
+        if current_fig_idx == 0:
+            i_ax.set_xlim(0, current_chr_length + CHR_HEADER_X_OFFSET + 1.5 + 20)  # set up x-grid (AU)
+        else:
+            i_ax.set_xlim(0, current_chr_length + CHR_HEADER_X_OFFSET + 1.5)
+        i_ax.set_ylim(0, img_y * 4)  # set up y-grid (AU)
+        i_ax.axis('off')  # turn on for debugging plotting location
+        if current_fig_idx == 0:
+            x_offset = 10
+            i_ax.text(0, 0.5, f"sample: {file_header}",
+                    va='bottom', fontsize=15, rotation=90, weight='bold')
+        else:
+            x_offset = 0
+        for chrom_idx, i_chromosome_data in enumerate(current_vis_input):
+            plot_chromosome(i_ax, i_chromosome_data, chrom_idx * Y_CONST + 1.5, x_offset, 1,
+                            only_show_event_number=False,
+                            CHR_HEADER_HIGHLIGHT_FONTSIZE=CHR_HEADER_HIGHLIGHT_FONTSIZE,
+                            CHR_HEADER_FONTSIZE=CHR_HEADER_FONTSIZE,
+                            CHR_HEADER_Y_OFFSET=CHR_HEADER_Y_OFFSET,
+                            CHR_HEADER_HIGHLIGHT_Y_OFFSET=CHR_HEADER_HIGHLIGHT_Y_OFFSET)
+        plt.savefig(f"{output_prefix}_split{current_fig_idx}.png", bbox_inches='tight', dpi=300, transparent=True)
+        plt.close()
+        rotate_image(f"{output_prefix}_split{current_fig_idx}.png", f"{output_prefix}_split{current_fig_idx}_rotated.png")
+        current_chr_idx += len(current_vis_input)
+        current_fig_idx += 1
+
+    # merge images
+    image_paths = [f"{output_prefix}_split{i}_rotated.png" for i in range(current_fig_idx)]  # already in the right order
+    output_path = f"{output_prefix}_merged_rotated.png"
+    preview_output_path = f"{output_prefix}_merged_rotated_preview.png"
+    concatenate_images_vertically(image_paths, output_path, preview_output_path)
+
+
+def concatenate_images_vertically(image_paths, output_path, preview_output_path):
+    # Open all images
+    images = [Image.open(image_path) for image_path in image_paths]
+    # Calculate the total height and maximum width of the final image
+    total_height = sum(image.size[1] for image in images)
+    max_width = max(image.size[0] for image in images)
+    # Create a new blank image with the calculated dimensions
+    concatenated_image = Image.new('RGB', (max_width, total_height))
+    # Paste each image onto the blank image, left-aligned
+    y_offset = 0
+    for image in images:
+        # If the image width is smaller than the maximum width, add padding on the right
+        if image.size[0] < max_width:
+            # Create a new image with the maximum width, filling the extra space with the background color
+            new_image = Image.new('RGB', (max_width, image.size[1]), color='#f6f6fa')
+            new_image.paste(image, (0, 0))  # Paste the original image onto the new one, left-aligned
+            image = new_image
+
+        # Paste the processed image onto the concatenated image
+        concatenated_image.paste(image, (0, y_offset))
+        y_offset += image.size[1]  # Move the offset down by the height of the image
+    # Save the final image
+    concatenated_image.save(output_path)
+    preview_resize = (int(concatenated_image.size[0] * 0.1), int(concatenated_image.size[1] * 0.1))
+    downscaled_image = concatenated_image.resize(preview_resize)
+    downscaled_image.save(preview_output_path)
 
 
 def merge_sv_labels(vis_entry, min_distance):

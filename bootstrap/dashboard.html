@@ -77,6 +77,30 @@
         background-color: #f6f6fa;
         border-radius: 1em;
     }
+
+    /*images*/
+    .summary-image-preview {
+        z-index: 5;
+        width: 6rem;
+        cursor: pointer;
+    }
+    .img-zoom-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .img-zoom-overlay img {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+    }
 </style>
 
 
@@ -90,13 +114,14 @@
           <thead class="h4-font">
                 <th class="dt-head-left">Sample</th>
                 <th class="dt-head-left"># Chromosomal Clusters</th>
-                <th class="dt-head-left">Complexity</th>
+                <th class="dt-head-left">Sample Complexity</th>
                 <th class="dt-head-left">Events Summary</th>
-<!--                <th class="dt-head-left">Summary Plot</th>-->
+                <th class="dt-head-left">Karyotype Plot</th>
               </tr>
           </thead>
             <tbody class="h5-font">
-              {% for filename, cluster, case_event_type_report, case_complexity in content %}
+              {% for filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image in content %}
+              {% set sample_id = loop.index %}
               <tr>
                 <td class="dt-body-left">
                   <a class="yoo-table-icon-title" href="{{filename}}.html" target="_blank">{{filename}}</a>
@@ -109,16 +134,19 @@
                 </td>
                 <td class="dt-body-left">
                   <p class="yoo-table-icon-title">{{ case_event_type_report }}</p>
-<!--                </td>-->
-<!--                  <td class="dt-body-left">-->
-<!--                  <p class="yoo-table-icon-title" href="assets/placeholder/23X_1q21_recurrent_microduplication_r1_imagecluster0_rotated.png">{{ case_event_type_report }}</p>-->
-<!--                </td>-->
+                </td>
+                <td class="dt-body-center">
+                  <img id="summary-image-{{ sample_id }}" src="karyotypes/{{summary_preview_image}}" class="img-fluid summary-image-preview">
+                </td>
               </tr>
               {% endfor %}
             </tbody>
       </table>
     </div>
   </div>
+</div>
+<div id="image-zoom-overlay" class="img-zoom-overlay">
+    <img id="overlay-image" src="" alt="Zoomed Image">
 </div>
 
 {% endblock content %}
@@ -146,5 +174,34 @@
     }
     updateMaxWidth();
     window.addEventListener('resize', updateMaxWidth);
+
+    // image hover-over
+    document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.getElementById('image-zoom-overlay');
+        const overlayImage = document.getElementById('overlay-image');
+
+        document.querySelectorAll('.summary-image-preview').forEach(image => {
+            // image.addEventListener('mouseover', function() {
+            //     image.style.cursor = 'pointer';
+            // });
+            image.addEventListener('click', function() {
+                overlayImage.src = this.src.replace("_preview", "");
+                overlay.style.display = 'flex';
+            });
+
+            // image.addEventListener('mouseout', function() {
+            //     overlay.style.display = 'none';
+            //     overlayImage.src = '';
+            // });
+        });
+
+        // Close the overlay when clicking anywhere else
+        window.addEventListener('click', function(event) {
+            if (!event.target.classList.contains('summary-image-preview')) {
+                overlay.style.display = 'none';
+                overlayImage.src = '';
+            }
+        });
+    });
 </script>
 {% endblock onreadyBlock %}

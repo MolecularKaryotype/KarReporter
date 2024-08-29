@@ -336,12 +336,26 @@ def chr_range_tostr(bpa, bpb, bpa_band, bpb_band):
 
 
 def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=None, compile_image=False, debug=False, skip=None, forbidden_region_file='KarUtils/Metadata/acrocentric_telo_cen.bed'):
+    def vis_key(input_vis):
+        chr_val = input_vis['chr'][3:]
+        if chr_val == "X":
+            return_val = 23.0
+        elif chr_val == "Y":
+            return_val = 24.0
+        else:
+            return_val = float(chr_val)
+        if input_vis['highlight']:
+            return_val += 0.5  # highlight always later
+        return return_val
+
     headers = []
     filenames = []
     clusters = []
     cases_with_events = []
     image1_paths = []
     image2_paths = []
+    summary_image_paths = []
+    summary_preview_image_paths = []
     iscn_reports = []
     genes_reports = []
     case_event_type_reports = []
@@ -371,6 +385,20 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             continue
         else:
             cases_with_events.append(filename)
+
+        # summary view image
+        summary_image_prefix = "{}/{}_cytoband_summary".format(image_dir, filename)
+        image_path = summary_image_prefix + "_merged_rotated.png"
+        preview_image_path = summary_image_prefix + "_merged_rotated_preview.png"
+        relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]
+        relative_preview_image_path = image_dir.replace('latex_reports/', '') + preview_image_path.split('/')[-1]
+        summary_image_paths.append(relative_image_path)
+        summary_preview_image_paths.append(relative_preview_image_path)
+        if compile_image:
+            summary_vis_input = generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_index_dict)
+            summary_vis_input = sorted(summary_vis_input, key=vis_key)
+            make_summary_image(filename, summary_vis_input, summary_image_prefix)
+
         dependent_clusters, cluster_events = form_dependent_clusters(events, aligned_haplotypes, index_to_segment_dict)
         print(dependent_clusters)
         ## iterate over all clusters
@@ -394,18 +422,6 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             ## generate report text
             c_events = sort_events(c_events)
             iscn_events, genes_report, event_type_reports = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
-
-            def vis_key(input_vis):
-                chr_val = input_vis['chr'][3:]
-                if chr_val == "X":
-                    return_val = 23.0
-                elif chr_val == "Y":
-                    return_val = 24.0
-                else:
-                    return_val = float(chr_val)
-                if input_vis['highlight']:
-                    return_val += 0.5  # highlight always later
-                return return_val
 
             ## generate images
             c_vis_input = generate_cytoband_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
@@ -474,7 +490,11 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
         case_event_type_reports.append(event_multiplicity_str)
         case_complexities.append(cluster_complexity)
         
-    return filenames, clusters, headers, cases_with_events, image1_paths, image2_paths, iscn_reports, genes_reports, case_event_type_reports, case_complexities, debug_outputs
+    return (filenames, clusters, headers, cases_with_events,
+            image1_paths, image2_paths,
+            iscn_reports, genes_reports,
+            case_event_type_reports, case_complexities, summary_image_paths, summary_preview_image_paths,
+            debug_outputs)
 
 
 def parse_event_multiplicities(dict_list):
@@ -504,12 +524,19 @@ def parse_event_multiplicities(dict_list):
                           'duplicated_insertion': 2,
                           'tandem_duplication': 1,
                           'deletion': 1}
+    # rename_mapping = {'reciprocal_translocation': 'T-r',
+    #                   'nonreciprocal_translocation': 'T-nr',
+    #                   'duplication_inversion': 'DUP-inv',
+    #                   'inversion': 'INV',
+    #                   'duplicated_insertion': 'INS-dup',
+    #                   'tandem_duplication': 'DUP',
+    #                   'deletion': 'DEL'}
     total_complexity = 0
     output_string = []
     for event in event_order:
         if event in combined_dict and combined_dict[event] > 0:
             total_complexity += complexity_mapping[event] * combined_dict[event]
-            output_string.append(f"<b>{event.replace('_', ' ')}:</b> {combined_dict[event]}")
+            output_string.append(f"<b>{event.replace("_", " ")}:</b> {combined_dict[event]}")
     output_string = ", ".join(output_string)
 
     return output_string, total_complexity
