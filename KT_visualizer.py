@@ -5,8 +5,7 @@ import colorsys
 from PIL import Image
 import math
 
-from KarUtils.utils import *
-from KarUtils.Structures import *
+from KarUtils import *
 
 
 def reduce_saturation(color, factor):
@@ -301,7 +300,9 @@ def generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_in
     return vis_input
 
 
-def generate_segment_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
+def generate_segment_visualizer_input(events, aligned_haplotypes, segment_to_index_dict,
+                                      label_centromere=False,
+                                      forbidden_region_file=get_metadata_file_path('acrocentric_telo_cen.bed')):
     ## make fixed color mapping for each segment
     all_indexed_segs = set()
     for hap in aligned_haplotypes:
@@ -311,9 +312,20 @@ def generate_segment_visualizer_input(events, aligned_haplotypes, segment_to_ind
     alternating_stain = ['alt1', 'alt2']  # alternate adjacent bands by two stains
     seg_color_mapping = {}
     stain_idx = 0
-    for seg in all_indexed_segs:
-        seg_color_mapping[seg] = alternating_stain[stain_idx]
-        stain_idx = (stain_idx + 1) % len(alternating_stain)
+    if label_centromere:
+        index_to_segment_dict = reverse_dict(segment_to_index_dict)
+        centromere_boundaries = get_centromere_boundaries(forbidden_region_file)
+        for seg in all_indexed_segs:
+            seg_obj = index_to_segment_dict[int(seg)]
+            if seg_intersect_boundaries(centromere_boundaries, seg_obj):
+                seg_color_mapping[seg] = 'acen'
+            else:
+                seg_color_mapping[seg] = alternating_stain[stain_idx]
+                stain_idx = (stain_idx + 1) % len(alternating_stain)
+    else:
+        for seg in all_indexed_segs:
+            seg_color_mapping[seg] = alternating_stain[stain_idx]
+            stain_idx = (stain_idx + 1) % len(alternating_stain)
 
     def label_segment_for_segmentview(typed_segment_list, indexed_segment_list):
         """
@@ -853,7 +865,6 @@ def make_summary_image(file_header, vis_input, output_prefix):
     preview_output_path = f"{output_prefix}_merged_rotated_preview.png"
     concatenate_images_vertically(image_paths, output_path, preview_output_path)
 
-
 def concatenate_images_vertically(image_paths, output_path, preview_output_path):
     # Open all images
     images = [Image.open(image_path) for image_path in image_paths]
@@ -880,7 +891,6 @@ def concatenate_images_vertically(image_paths, output_path, preview_output_path)
     preview_resize = (int(concatenated_image.size[0] * 0.1), int(concatenated_image.size[1] * 0.1))
     downscaled_image = concatenated_image.resize(preview_resize)
     downscaled_image.save(preview_output_path)
-
 
 def merge_sv_labels(vis_entry, min_distance):
     if len(vis_entry['sv_labels']) == 0:

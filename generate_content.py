@@ -436,7 +436,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
                     make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_HORIZONTAL_SPLIT)
             image1_paths.append(relative_image_path)
 
-            c_vis_input = generate_segment_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
+            c_vis_input = generate_segment_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict, label_centromere=True)
             c_vis_input = sorted(c_vis_input, key=vis_key)
             image_prefix = "{}/{}_segmentview_imagecluster{}".format(image_dir, filename, image_cluster_idx)
             image_path = image_prefix + '_rotated.png'
@@ -536,7 +536,7 @@ def parse_event_multiplicities(dict_list):
     for event in event_order:
         if event in combined_dict and combined_dict[event] > 0:
             total_complexity += complexity_mapping[event] * combined_dict[event]
-            output_string.append(f"<b>{event.replace("_", " ")}:</b> {combined_dict[event]}")
+            output_string.append(f"<b>{event.replace('_', ' ')}:</b> {combined_dict[event]}")
     output_string = ", ".join(output_string)
 
     return output_string, total_complexity
