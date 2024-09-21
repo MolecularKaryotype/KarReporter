@@ -77,7 +77,7 @@ LABEL_BAR_THICKNESS = 1.25
 LABEL_BAR_ALPHA = 1
 LABEL_MARK_ALPHA = 1
 
-BAND_FONTSIZE = 3.5
+BAND_FONTSIZE = 4.2
 LABEL_MARK_FONTSIZE = 6
 CHR_HEADER_HIGHLIGHT_FONTSIZE = 12
 CHR_HEADER_FONTSIZE = 7
@@ -734,7 +734,7 @@ def test_artificial_chr_image():
 
 ##########################IO###########################
 
-def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
+def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale, output_svg=False, output_pdf=False):
     plt.rcParams['figure.dpi'] = IMAGE_DPI
 
     # if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
@@ -804,7 +804,11 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
                         CHR_HEADER_Y_OFFSET=1.8,
                         CHR_HEADER_HIGHLIGHT_Y_OFFSET=1.15)
 
-    plt.savefig(output_prefix + '.png', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
+    plt.savefig(output_prefix + '.png', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)  # change to SVG for manualscript-prep
+    if output_svg:
+        plt.savefig(output_prefix + '.svg', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
+    if output_pdf:
+        plt.savefig(output_prefix + '.pdf', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
     plt.close()
     rotate_image(output_prefix + '.png', output_prefix + '_rotated.png')
 
