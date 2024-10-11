@@ -1,9 +1,12 @@
+from random import sample
+
 from jinja2 import Environment, FileSystemLoader
 import base64
 import os
 import shutil
 from generate_content import *
 from KarUtils import *
+import copy
 
 
 def image_to_base64(image_path):
@@ -85,6 +88,25 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
      iscn_reports, genes_reports,
      case_event_type_reports, case_complexities, summary_image_paths, summary_preview_image_paths,
      debug_outputs) = batch_populate_html_contents(data_dir, image_output_dir, file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
+
+    ## summarizing number of events
+    summary_event_counts = {}
+    for sample_str in case_event_type_reports:
+        parsed_str = copy.deepcopy(sample_str)
+        parsed_str = parsed_str.replace('<b>', '').replace('</b>', '').split(', ')
+        if not sample_str:
+            # case without interpreted event
+            continue
+        for info in parsed_str:
+            info = info.split(': ')
+            event_type = info[0]
+            event_count = int(info[1])
+            if event_type not in summary_event_counts:
+                summary_event_counts[event_type] = event_count
+            else:
+                summary_event_counts[event_type] += event_count
+    print({key: summary_event_counts[key] for key in sorted(summary_event_counts)})
+
     images1_base64 = [image_to_base64(img) for img in image1_paths]
     images2_base64 = [image_to_base64(img) for img in image2_paths]
     os.makedirs(output_dir + "/karyotypes/", exist_ok=True)
@@ -96,6 +118,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     summary_preview_image_names = [img.split('/')[-1] for img in summary_preview_image_paths]
     with open("bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
         magnifying_glass_icon = fp_read.readline().strip()
+
 
     formatted_genes_reports = [format_genes_report(genes_report) for genes_report in genes_reports]
     columns_order = ['SV', 'gene name', 'gene omim', 'rationale']
