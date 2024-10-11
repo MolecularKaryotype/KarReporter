@@ -7,8 +7,26 @@ from KarUtils import *
 
 
 def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict, debug=False):
+    """
+    Given the output of KarInterpreter, generate the event string and genes of interest for downstream report
+    @param interpreted_events:
+    @param aligned_haplotypes:
+    @param index_to_segment_dict:
+    @param debug:
+    @return:
+    """
     iscn_events = []
     gene_reports = []
+    event_type_reports = {
+        "deletion":0,
+        "inversion":0,
+        "tandem_duplication":0,
+        "left_duplication_inversion":0,
+        "right_duplication_inversion":0,
+        "insertion":0,
+        'nonreciprocal_translocation':0,
+        'reciprocal_translocation':0
+    }
     associated_event_already_reported = []
     for event in interpreted_events:
         event_id = event[0]
@@ -81,6 +99,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 bp4_band = 'qter'
 
             if event_type == 'deletion':
+                event_type_reports['deletion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'del({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -91,6 +110,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = -1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'inversion':
+                event_type_reports['inversion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'inv({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -99,6 +119,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 iscn_interpretation = 'inversion on Chr{}: {}'.format(path_chr, chr_range)
                 bp_genes, bp_genes_highlight = report_on_genes_based_on_breakpoints([(bp1_chr, bp1), (bp2_chr, bp2), (bp3_chr, bp3), (bp4_chr, bp4)])
             elif event_type == 'tandem_duplication':
+                event_type_reports['tandem_duplication'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'dup({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -109,6 +130,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = 1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'left_duplication_inversion':
+                event_type_reports['left_duplication_inversion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'left-dup-inv({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -119,6 +141,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = 1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'right_duplication_inversion':
+                event_type_reports['right_duplication_inversion'] += 1
                 if bp2_band != bp3_band:
                     main_str = 'right-dup-inv({})({}{})'.format(path_chr, bp2_band, bp3_band)
                 else:
@@ -129,6 +152,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 cn_signature = 1
                 cn_changed_genes, cn_changed_genes_highlight = report_cnv_genes_on_region(path_chr, bp2, bp3)
             elif event_type == 'insertion':
+                event_type_reports['insertion'] += 1
                 # different report format if insertion is from different chr
                 if 'Chr' + path_chr == bp2_chr:
                     # TODO: check ISCN syntax if bp2_band == bp3_band
@@ -149,6 +173,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                 # continue
                 raise RuntimeError('event not in allowed list')
         elif event_type.startswith("balanced_translocation_associated"):
+            event_type_reports['reciprocal_translocation'] += 1
             # TODO: only works with 2-break reciprocal balanced translocation
             o_event_id = int(event_type.split('<')[1].split('>')[0])
             # get extract the other event
@@ -253,6 +278,7 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                                                                                      (chr1, seg1_left_bp), (chr1, seg1_right_bp)])
             associated_event_already_reported.append(o_event_id)
         elif event_type.startswith("balanced_translocation_unassociated"):
+            event_type_reports['nonreciprocal_translocation'] += 1
             event_info = event[2]
             if event_info[0].split('.')[2].startswith('mt'):
                 del_idx = 0
@@ -302,23 +328,43 @@ def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict,
                              'cnv_genes_highlight': cn_changed_genes_highlight})
     if len(iscn_events) != len(gene_reports):
         raise RuntimeError('unmatched reports')
-    return iscn_events, gene_reports
+    return iscn_events, gene_reports, event_type_reports
 
 
 def chr_range_tostr(bpa, bpb, bpa_band, bpb_band):
     return "{}-{} ({} - {})".format(format(bpa, ',d'), format(bpb, ',d'), bpa_band, bpb_band)
 
 
-def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, compile_image=False, debug=False, skip=None, forbidden_region_file='KarUtils/Metadata/acrocentric_telo_cen.bed'):
+def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=None, compile_image=False, debug=False, skip=None, forbidden_region_file='KarUtils/Metadata/acrocentric_telo_cen.bed'):
+    def vis_key(input_vis):
+        chr_val = input_vis['chr'][3:]
+        if chr_val == "X":
+            return_val = 23.0
+        elif chr_val == "Y":
+            return_val = 24.0
+        else:
+            return_val = float(chr_val)
+        if input_vis['highlight']:
+            return_val += 0.5  # highlight always later
+        return return_val
+
     headers = []
+    filenames = []
+    clusters = []
     cases_with_events = []
-    image_paths = []
+    image1_paths = []
+    image2_paths = []
+    summary_image_paths = []
+    summary_preview_image_paths = []
     iscn_reports = []
     genes_reports = []
+    case_event_type_reports = []
+    case_complexities = []
     debug_outputs = []  # list of dicts [{'segs': [], 'mt_haps': [], 'wt_haps': []}]
     files = [file for file in os.listdir(omkar_output_dir)]
     # files = sorted(files, key=int_file_keys)
     for file in files:
+        file_event_type_reports = []
         if file_of_interest is not None:
             if file.split('.')[0] not in file_of_interest:
                 continue
@@ -326,6 +372,7 @@ def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, 
             if file.split('.')[0] in skip:
                 continue
         filename = file.split('.')[0]
+        filenames.append(filename)
         file_path = omkar_output_dir + file
         print(file)
         mt_indexed_lists, mt_path_chrs, segment_to_index_dict, segment_size_dict = read_OMKar_to_indexed_list(file_path, forbidden_region_file)
@@ -338,13 +385,29 @@ def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, 
             continue
         else:
             cases_with_events.append(filename)
+
+        # summary view image
+        summary_image_prefix = "{}/{}_cytoband_summary".format(image_dir, filename)
+        image_path = summary_image_prefix + "_merged_rotated.png"
+        preview_image_path = summary_image_prefix + "_merged_rotated_preview.png"
+        relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]
+        relative_preview_image_path = image_dir.replace('latex_reports/', '') + preview_image_path.split('/')[-1]
+        summary_image_paths.append(relative_image_path)
+        summary_preview_image_paths.append(relative_preview_image_path)
+        if compile_image:
+            summary_vis_input = generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_index_dict)
+            summary_vis_input = sorted(summary_vis_input, key=vis_key)
+            make_summary_image(filename, summary_vis_input, summary_image_prefix)
+
         dependent_clusters, cluster_events = form_dependent_clusters(events, aligned_haplotypes, index_to_segment_dict)
         print(dependent_clusters)
         ## iterate over all clusters
         n_clusters = len(dependent_clusters)
+        clusters.append(n_clusters)
         for image_cluster_idx, (c_cluster, c_events) in enumerate(zip(dependent_clusters, cluster_events)):
             # to remove all later file names, check cluster_idx != 0
-            headers.append('{}: cluster {} (out of {})'.format(filename, image_cluster_idx + 1, n_clusters))
+            
+            headers.append('Chromosomal Cluster {} (of {})'.format(image_cluster_idx + 1, n_clusters))
             ## include all homologues
             event_chr = set()
             for cluster_idx in c_cluster:
@@ -358,24 +421,12 @@ def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, 
 
             ## generate report text
             c_events = sort_events(c_events)
-            iscn_events, genes_report = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
-            ## generate image
-            c_vis_input = generate_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
+            iscn_events, genes_report, event_type_reports = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
 
-            def vis_key(input_vis):
-                chr_val = input_vis['chr'][3:]
-                if chr_val == "X":
-                    return_val = 23.0
-                elif chr_val == "Y":
-                    return_val = 24.0
-                else:
-                    return_val = float(chr_val)
-                if input_vis['highlight']:
-                    return_val += 0.5  # highlight always later
-                return return_val
-
+            ## generate images
+            c_vis_input = generate_cytoband_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict)
             c_vis_input = sorted(c_vis_input, key=vis_key)
-            image_prefix = "{}/{}_imagecluster{}".format(image_dir, filename, image_cluster_idx)
+            image_prefix = "{}/{}_cytoband_imagecluster{}".format(image_dir, filename, image_cluster_idx)
             image_path = image_prefix + '_rotated.png'
             relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]
             if compile_image:
@@ -383,10 +434,24 @@ def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, 
                     make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_VERTICAL_SPLIT)
                 else:
                     make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_HORIZONTAL_SPLIT)
+            image1_paths.append(relative_image_path)
 
-            image_paths.append(relative_image_path)
+            c_vis_input = generate_segment_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict, label_centromere=True)
+            c_vis_input = sorted(c_vis_input, key=vis_key)
+            image_prefix = "{}/{}_segmentview_imagecluster{}".format(image_dir, filename, image_cluster_idx)
+            image_path = image_prefix + '_rotated.png'
+            relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]
+            if compile_image:
+                if len(c_vis_input) <= 4:
+                    make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_VERTICAL_SPLIT)
+                else:
+                    make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix,
+                               IMG_LENGTH_SCALE_HORIZONTAL_SPLIT)
+            image2_paths.append(relative_image_path)
+
             iscn_reports.append(iscn_events)
             genes_reports.append(genes_report)
+            file_event_type_reports.append(event_type_reports)
 
             ## generate debug output
             debug_segs = set()
@@ -409,8 +474,8 @@ def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, 
                 hap_found = False
                 for aligned_haplotype in aligned_haplotypes:
                     if aligned_haplotype.id == c_vis['hap_id']:
-                        debug_mt_haps.append(aligned_haplotype.mt_hap)
-                        debug_wt_haps.append(aligned_haplotype.wt_hap)
+                        debug_mt_haps.append(str(aligned_haplotype.mt_hap).replace("'", ''))
+                        debug_wt_haps.append(str(aligned_haplotype.wt_hap).replace("'", ''))
                         debug_mt_aligned.append(aligned_haplotype.mt_aligned)
                         debug_wt_aligned.append(aligned_haplotype.wt_aligned)
                         hap_found = True
@@ -420,8 +485,61 @@ def batch_populate_contents(omkar_output_dir, image_dir, file_of_interest=None, 
             debug_outputs.append({'segs': debug_segs, 'mt_haps': debug_mt_haps, 'wt_haps': debug_wt_haps, 'IDs': debug_hap_ids,
                                   'mt_aligned': debug_mt_aligned, 'wt_aligned': debug_wt_aligned})
 
-    return headers, cases_with_events, image_paths, iscn_reports, genes_reports, debug_outputs
+        #Add the new dictionary into the case_event_type_reports
+        event_multiplicity_str, cluster_complexity = parse_event_multiplicities(file_event_type_reports)
+        case_event_type_reports.append(event_multiplicity_str)
+        case_complexities.append(cluster_complexity)
+        
+    return (filenames, clusters, headers, cases_with_events,
+            image1_paths, image2_paths,
+            iscn_reports, genes_reports,
+            case_event_type_reports, case_complexities, summary_image_paths, summary_preview_image_paths,
+            debug_outputs)
 
+
+def parse_event_multiplicities(dict_list):
+    combined_dict = {}
+
+    for d in dict_list:
+        for key, value in d.items():
+            key = key.replace('left_duplication_inversion', 'duplication_inversion')
+            key = key.replace('right_duplication_inversion', 'duplication_inversion')
+            if key not in combined_dict:
+                combined_dict[key] = value
+            else:
+                combined_dict[key] += value
+
+    # sort dictionary in correct event order, and return complexity
+    event_order = ['reciprocal_translocation',
+                   'nonreciprocal_translocation',
+                   'duplication_inversion',
+                   'inversion',
+                   'duplicated_insertion',
+                   'tandem_duplication',
+                   'deletion']
+    complexity_mapping = {'reciprocal_translocation': 2,
+                          'nonreciprocal_translocation': 3,
+                          'duplication_inversion': 2,
+                          'inversion': 2,
+                          'duplicated_insertion': 2,
+                          'tandem_duplication': 1,
+                          'deletion': 1}
+    # rename_mapping = {'reciprocal_translocation': 'T-r',
+    #                   'nonreciprocal_translocation': 'T-nr',
+    #                   'duplication_inversion': 'DUP-inv',
+    #                   'inversion': 'INV',
+    #                   'duplicated_insertion': 'INS-dup',
+    #                   'tandem_duplication': 'DUP',
+    #                   'deletion': 'DEL'}
+    total_complexity = 0
+    output_string = []
+    for event in event_order:
+        if event in combined_dict and combined_dict[event] > 0:
+            total_complexity += complexity_mapping[event] * combined_dict[event]
+            output_string.append(f"<b>{event.replace('_', ' ')}:</b> {combined_dict[event]}")
+    output_string = ", ".join(output_string)
+
+    return output_string, total_complexity
 
 
 def get_ucsc_url(chrom, start_pos, end_pos, db='hg38'):

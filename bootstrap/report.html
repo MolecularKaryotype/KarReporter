@@ -1,0 +1,628 @@
+{% extends "base.html" %}
+
+{% block title %}
+    - {{title}}
+{% endblock %}
+
+{% block content %}
+
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.8">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+    /*fonts*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Regular.ttf') format('truetype');*/
+    /*    font-weight: 400;*/
+    /*    font-style: normal;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Italic.ttf') format('truetype');*/
+    /*    font-weight: 400;*/
+    /*    font-style: italic;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Bold.ttf') format('truetype');*/
+    /*    font-weight: 700;*/
+    /*    font-style: normal;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');*/
+    /*    font-weight: 700;*/
+    /*    font-style: italic;*/
+    /*}*/
+    body {
+        font-size: 14.4px;
+        font-family: 'Lato', sans-serif;
+    }
+    .h1-font {
+        font-size: 2.05rem;
+    }
+    .h2-font {
+        font-size: 1.75rem;
+    }
+    .h3-font {
+        font-size: 1.55rem;
+    }
+    .h4-font {
+        font-size: 1.25rem;
+    }
+    .h5-font {
+        font-size: 1.1rem;
+    }
+    .h6-font {
+        font-size: 1rem;
+    }
+    /*containers*/
+    .case-master-container {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        /*max-height: 125%;  !*this is post scaling*!*/
+        margin-top: 1.25rem;
+        margin-bottom: 1.25em;
+        /*overflow: hidden;*/
+    }
+    .case-container {
+        width: 100%;
+        display: flex;
+    }
+
+    .left-container {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .cluster-text-container{
+        display: flex;
+        flex-direction: column;
+    }
+
+    .spacer-container {
+        /*fixed container between text and image*/
+        width: 1.5vw;
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+
+    .right-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0.6rem;
+        width: 19vw;
+        flex-shrink: 0;
+        flex-grow: 0;
+    }
+
+    .toggle-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        flex: 0 1 auto;
+    }
+
+    .cluster-image-container {
+        display: flex;
+        width: 100%;
+        flex: 1;
+        position: relative;
+    }
+
+    .magnifying-glass-icon {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1.5rem; /* Adjust the size of the icon */
+        height: 1.5rem;
+        z-index: 6;
+    }
+
+    /*shading box*/
+    .background-shading {
+        background-color: #f6f6fa;
+        border-radius: 1rem;
+    }
+    .list-group-item {
+        background-color: transparent;
+    }
+    .accordion {
+        background-color: #f6f6fa;
+    }
+    .accordion-item {
+        background-color: #f6f6fa;
+    }
+    .accordion-button {
+        background-color: #f6f6fa;
+    }
+
+    /* Slider Switch Style */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 5.2em;
+        height: 2.6em;
+    }
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 2.6em;
+    }
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 2em;
+        width: 2em;
+        left: 0.31em;
+        bottom: 0.31em;
+        background-color: white;
+        transition: .15s;
+        border-radius: 50%;
+    }
+    input:checked + .slider {
+        background-color: #2196F3;
+    }
+    input:checked + .slider:before {
+        transform: translateX(2em);
+    }
+
+    /*magnifying glass effect*/
+    .img-magnifier-container {
+      position: relative;
+    }
+
+    .img-magnifier-glass {
+      position: absolute;
+      border-radius: 50%;
+      cursor: none;
+      z-index: 12;
+      /*magnifier glass size is defined dynamically*/
+    }
+</style>
+</head>
+
+
+
+<div id="report" class="case-master-container">
+    <div class="case-container">
+        <div class="left-container">
+            <div class="h1-font" style="text-align:center; margin-top: 0; margin-bottom:0; font-weight: bold">Sample: {{title}}</div>
+            <div id="report_page_top" style="text-align:center"></div>
+            <div class="stacked-cluster-text-containers" style="position:relative; flex:1; margin-top:0.75rem">
+                {% for header, image1, image2, iscn, gene_report, debug_info in content %}
+                    {% set cluster_id = loop.index %}
+                    <div class="cluster-text-container" id="cluster-text-{{ cluster_id }}">
+                        <div class="h2-font" style="font-weight:bold; margin-top:0.5rem">{{header}}</div>
+                        <div class="clustered-sv-container background-shading" style="margin-top: 1.5rem">
+                            <p><div class="h3-font" style="font-weight: bold; margin-bottom:0; padding-left: 0.75rem">
+                                Clustered Structural Variants
+                            </div></p>
+                            <ul class="list-group" style="padding-left: 1.9rem; padding-right: 0.75rem">
+                                {% for sv in iscn %}
+                                <li class="list-group-item" style="border: none; padding:0; text-align:left ;">
+                                    <p style="margin-bottom: 0;"><div class="h4-font"><strong>
+                                        {{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}
+                                    </div></p>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="genes-container background-shading" style="margin-top: 0.75rem;">
+                            <p><div class="h3-font" style="font-weight: bold; margin-bottom:0; padding-left: 0.75rem">Disrupted DDG2P Genes</div></p>
+                            {% if gene_report %}
+                                <div class="table-container" style="padding-left:1.5rem; padding-right:1.5rem; padding-bottom:1.5rem">
+                                    <table id="gene_report" class="table table-bordered table-striped table-hover cell-border compact stripe gene_report">
+                                        <thead>
+                                            <tr class="h4-font">
+                                                {% for col_name in columns_order %}
+                                                <th class="dt-head{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ col_name }}</th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for row in gene_report %}
+                                            <tr class="h5-font">
+                                                {% for col_name in columns_order %}
+                                                <td class="dt-body{% if not loop.first %}-right{%else%}-right{% endif %} ">{{ row[col_name] }}</td>
+                                                {% endfor %}
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            {%else%}
+                                <p class="h4-font" style="padding-left: 1.9rem; font-weight: bold;">None Found</p>
+                            {% endif %}
+                        </div>
+                        <div class="omkar-output-container" style="margin-top: 0.75rem">
+                            <div class="accordion segment-table-container" id="omkar_reference">
+                                <div class="accordion-item">
+                                    <div class="accordion-header" id="panelsStayOpen-headingOne">
+                                        <button class="h3-font accordion-button collapsed" style="padding-left:0.75rem; font-weight:bold;" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
+                                            <p style="margin:0">OMKar Output</p>
+                                        </button>
+                                    </div>
+                                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                                        <div class="accordion-body" style="padding: 0.75rem">
+                                            <p><div class="h4-font" style="font-weight: bold;">Paths</div></p>
+                                            {% for mt_hap in debug_info.mt_haps %}
+                                                <p class="h4-font" style="padding-left: 1.5rem;">
+                                                    {{ debug_info.IDs[loop.index - 1] }}:  {{ mt_hap }}
+                                                </p>
+                                            {% endfor %}
+                                            <p><div class="h4-font" style="font-weight: bold;">Segment List</div></p>
+                                            <div class="segment-table-container" style="padding-left:0.75rem; padding-right:0.75rem; padding-bottom:0.75rem;">
+                                                <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0;">
+                                                    <thead>
+                                                        <tr class="h4-font">
+                                                            <th class="dt-head-right">Segment</th>
+                                                            <th class="dt-head-right">chr</th>
+                                                            <th class="dt-head-right">start</th>
+                                                            <th class="dt-head-right">end</th>
+                                                            <th class="dt-head-right">size</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for seg in debug_info.segs %}
+                                                        <tr class="h5-font">
+                                                            <td class="dt-body-right">{{ seg[0] }}</td>
+                                                            <td class="dt-body-right">{{ seg[1] }}</td>
+                                                            <td class="dt-body-right">{{ seg[2] }}</td>
+                                                            <td class="dt-body-right">{{ seg[3] }}</td>
+                                                            <td class="dt-body-right">{{ seg[4] }}</td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="debug-table">
+                        <!--debug tables-->
+                        {% if debug %}
+                        <div class="accordion segment-table-container " id="wt_haps">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
+                                    wt_haps
+                                    </button>
+                                </h2>
+                                <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
+                                    <div class="accordion-body">
+                                        <ul class="list-group">
+                                            {% for wt_hap in debug_info.wt_haps %}
+                                                <li class="list-group-item"><p>{{ wt_hap }}</p></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+
+
+                    <div class="accordion segment-table-container" id="alignment">
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseThree">
+                            alignments
+                            </button>
+                        </h2>
+                        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
+                            <div class="accordion-body">
+                                <ul class="list-group">
+                                    {% for mt_aligned in debug_info.mt_aligned %}
+                                        <li class="list-group-item"><p>{{ mt_aligned }} {{ debug_info.wt_aligned[loop.index - 1] }}</p></li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="spacer-container"></div>
+        <div class="right-container">
+            <div class="toggle-container">
+                <p class="h4-font" style="margin:0" id="sliderLabel">Show Segment-View</p>
+                <p style="margin-bottom: 0.5em"></p>
+                <label class="switch" style="flex:1; max-width:4.62em; margin-left:0.7rem; max-height:2.62em; min-width:4.62em; min-height:2.62em;">
+                    <input type="checkbox" id="toggleSlider" onclick="toggleImage()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="stacked-cluster-image-containers" style="margin-top:0.75rem; position:relative; flex:1;">
+                {% for header, image1, image2, iscn, gene_report, debug_info in content %}
+                    {% set cluster_id = loop.index %}
+                    <div class="cluster-image-container" id="cluster-image-{{ cluster_id }}">
+                        <img id="image1-{{ cluster_id }}" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid image1 background-shading img-magnifier-container" style="display:block; z-index:5">
+                        <img id="image2-{{ cluster_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading" style="display:block; z-index:5">
+                    </div>
+                    <img src="data:image/png;base64,{{ mag_icon }}" id="magnifying-glass-icon-img" class="magnifying-glass-icon">
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block onreadyBlock %}
+<script>
+    // dynamic width-ratio
+    function updateMaxWidth() {
+        const container = document.querySelector('.case-container');
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const aspectRatio = viewportWidth / viewportHeight;
+        console.log("viewportWidth: ", viewportWidth);
+        console.log("viewportHeight: ", viewportHeight);
+
+        if (viewportWidth >= 1280) {
+            // Calculate width based on aspect ratio
+            const maxWidth = Math.min(viewportWidth, (1.45 / aspectRatio) * viewportWidth);
+            // console.log('Viewport Width:', viewportWidth);
+            // console.log('Aspect Ratio:', aspectRatio);
+            // console.log('Calculated Width:', maxWidth + 'px');
+            container.style.width = maxWidth + 'px';
+        } else {
+            // Full width for smaller screens
+            container.style.width = '100%';
+        }
+    }
+    updateMaxWidth();
+    window.addEventListener('resize', updateMaxWidth);
+    const zoom = 2;
+    const magnifierSize = 0.65;
+    const magnifierBorder = magnifierSize * 0.02;
+    const caseMasterContainer = document.getElementById("report");
+    caseMasterContainer.style.marginBottom = (magnifierSize + 0.1) * 0.5 * 0.19 * window.innerWidth + "px";
+    for (let i = 1; i <= {{content|length}}; i++) {
+        magnify("image1-" + i, zoom);
+        magnify("image2-" + i, zoom);
+    };
+    document.querySelectorAll('.mag2').forEach(magItr => {
+        magItr.style.display = 'none';
+    });
+    document.querySelectorAll('.image2').forEach(imageItr => {
+        imageItr.style.display = 'none';
+    });
+    $(document).ready(function () {
+        $(".cluster-text-container").hide()
+        $(".cluster-image-container").hide()
+        $(".mag1").hide()
+        $(".mag2").hide()
+        let displayIDs = []
+
+        for (let i = 1; i <= {{content|length}}; i++) {
+            displayIDs.push({
+                text: $("#cluster-text-" + i),
+                image: $("#cluster-image-" + i)
+            });
+        }
+        $('#report_page_top').pagination({
+            pageSize: 1,
+            pageRange: null,
+            totalNumber: {{content|length}},
+            showPageNumbers: true,
+            dataSource: displayIDs,
+            callback: function(data, pagination) {
+                $(".cluster-image-container").hide()
+                $(".cluster-text-container").hide()
+                $(".mag1").hide()
+                $(".mag2").hide()
+                data[0].text.show()
+                data[0].image.show()
+                // const clusterImageID = data[0].image[0].id;
+                // const mag1 = document.getElementById(clusterImageID.replace('cluster-image', 'mag1'));
+                // const mag2 = document.getElementById(clusterImageID.replace('cluster-image', 'mag2'));
+                // const label = document.getElementById("sliderLabel");
+                // if (label.textContent === "Show Segment-View") {
+                //     mag1.style.display = 'block';
+                // } else {
+                //     mag2.style.display = 'block';
+                // }
+                resizeGlassBackground();
+            }
+        });
+    })
+    function toggleImage() {
+        // Get all elements with class 'image1' and 'image2'
+        const images1 = document.querySelectorAll('.image1');
+        const images2 = document.querySelectorAll('.image2');
+
+        // Toggle display for all 'image1' elements
+        images1.forEach(imageItr => {
+            // const mag1 = document.getElementById(imageItr.id.replace('image1', 'mag1'))
+            if (imageItr.style.display === 'none') {
+                imageItr.style.display = 'block';
+                // mag1.style.display = 'block';
+            } else {
+                imageItr.style.display = 'none';
+                // mag1.style.display = 'none';
+            }
+        });
+
+        // Toggle display for all 'image2' elements
+        images2.forEach(imageItr => {
+            // const mag2 = document.getElementById(imageItr.id.replace('image2', 'mag2'))
+            if (imageItr.style.display === 'none') {
+                imageItr.style.display = 'block';
+                // mag2.style.display = 'block';
+            } else {
+                imageItr.style.display = 'none';
+                // mag2.style.display = 'none';
+            }
+        });
+        resizeGlassBackground();
+
+        let label = document.getElementById("sliderLabel");
+        if (label.textContent === "Show Segment-View") {
+            label.textContent = "Show Cytoband-View";
+        } else {
+            label.textContent = "Show Segment-View";
+        }
+    }
+
+    // ensures the maginifier works with scrolling and zooming
+    function getElementPosition(containerID) {
+        const container = document.getElementById(containerID);
+        if (!container) {
+            console.error("Element not found");
+            return;
+        }
+        // Get the bounding client rect
+        const rect = container.getBoundingClientRect();
+        // Extract and log the position and dimensions
+        const position = {
+            top: rect.top,
+            left: rect.left,
+            bottom: rect.bottom,
+            right: rect.right,
+            width: rect.width,
+            height: rect.height
+        };
+        // console.log(position);
+        return position;
+    }
+    function magnify(imgID) {
+        let img, glass;
+        img = document.getElementById(imgID);
+
+        /* Create magnifier glass: */
+        glass = document.createElement("DIV");
+        if (imgID.startsWith("image1")) {
+            glass.setAttribute("class", "img-magnifier-glass mag1");
+            glass.setAttribute("id", imgID.replace('image1', 'mag1'));
+        } else if (imgID.startsWith("image2")) {
+            glass.setAttribute("class", "img-magnifier-glass mag2");
+            glass.setAttribute("id", imgID.replace('image2', 'mag2'));
+        }
+
+        /* Insert magnifier glass: */
+        img.parentElement.insertBefore(glass, img);  // glass's position is defined to be relative to img-container (instead of viewport)
+
+        /* Set background properties for the magnifier glass: */
+        glass.style.display = "none";
+        glass.style.zIndex = "10";
+        glass.style.backgroundImage = "url('" + img.src + "')";
+        glass.style.backgroundRepeat = "no-repeat";
+        glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+        glass.style.backgroundColor = "#f6f6fa";
+        glass.style.width = (img.width * magnifierSize) + "px";
+        glass.style.height = (img.width * magnifierSize) + "px";
+        glass.style.border = (img.width * magnifierBorder) + "px solid #000";
+
+        /* Execute a function when someone moves the magnifier glass over the image: */
+        window.addEventListener('mousemove', showAndHideMagnifier);
+        glass.addEventListener("mousemove", moveMagnifier);
+        img.addEventListener("mousemove", moveMagnifier);
+        window.addEventListener("resize", resizeGlassBackground);  // ensure mag works with page-zooming\
+
+        /*and also for touch screens:*/
+        // glass.addEventListener("touchmove", moveMagnifier);
+        // img.addEventListener("touchmove", moveMagnifier);
+
+        function showAndHideMagnifier(e) {
+            let x, y, imgPos;
+            x = e.clientX;
+            y = e.clientY;
+            imgPos = getElementPosition(imgID);
+            const boundaryOffset = magnifierSize / zoom;  // prevent glass freezing near boundary
+            /* Prevent the magnifier glass from being positioned outside the image: */
+            if (x < 0 || y < 0 || x < imgPos.left + boundaryOffset || x > imgPos.right - boundaryOffset || y < imgPos.top + boundaryOffset || y > imgPos.bottom - boundaryOffset) {
+                glass.style.display = "none";
+                img.style.cursor = 'default';
+            } else {
+                glass.style.display = "block";
+                img.style.cursor = 'none';
+            }
+        }
+        function moveMagnifier(e) {
+            let x, y, imgPos, magOffset;
+            /* Prevent any other actions that may occur when moving over the image */
+            e.preventDefault();
+            /* Get the cursor's x and y positions: */
+            x = e.clientX;
+            y = e.clientY;
+            magOffset = glass.offsetWidth / 2;
+            imgPos = getElementPosition(imgID);
+            /* Set the position of the magnifier glass: */
+            let x_grounded, y_grounded;
+            x_grounded = x - imgPos.left;
+            y_grounded = y - imgPos.top;
+            // console.log("x_grounded: ", x_grounded);
+            // console.log("y_grounded: ", y_grounded);
+            // console.log("magOffset: ", magOffset);
+            glass.style.left = (x_grounded - magOffset) + "px";
+            glass.style.top = (y_grounded - magOffset) + "px";
+            /* Display what the magnifier glass "sees": */
+            let backgroundX = Math.max(0, (x_grounded * zoom) - magOffset);
+            let backgroundY = Math.max(0, (y_grounded * zoom) - magOffset);
+            glass.style.backgroundPosition = "-" + backgroundX + "px -" + backgroundY + "px";
+        }
+    }
+    function resizeGlassBackground() {
+        const maxImgPos = getShownImageSizes();
+        // console.log(maxImgPos);
+        document.querySelectorAll('.mag1').forEach(glassItr => {
+            glassItr.style.backgroundSize = ((maxImgPos.width) * zoom) + "px " + (maxImgPos.height * zoom) + "px";
+            glassItr.style.width = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.height = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.border = (maxImgPos.width * magnifierBorder) + "px solid #000";
+        });
+        document.querySelectorAll('.mag2').forEach(glassItr => {
+            glassItr.style.backgroundSize = (maxImgPos.width * zoom) + "px " + (maxImgPos.height * zoom) + "px";
+            glassItr.style.width = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.height = (maxImgPos.width * magnifierSize) + "px";
+            glassItr.style.border = (maxImgPos.width * magnifierBorder) + "px solid #000";
+        });
+        caseMasterContainer.style.marginBottom = (magnifierSize + 0.1) * 0.5 * 0.19 * window.innerWidth + "px";
+    }
+    function getShownImageSizes() {
+        let maxWidth = 0;
+        let maxImgPos = null;
+        document.querySelectorAll('.image1').forEach(imageItr => {
+            const imgPos = getElementPosition(imageItr.id)
+            if (imgPos.width > maxWidth) {
+                maxWidth = imgPos.width;
+                maxImgPos = imgPos;
+            }
+        });
+        document.querySelectorAll('.image2').forEach(imageItr => {
+            const imgPos = getElementPosition(imageItr.id)
+            if (imgPos.width > maxWidth) {
+                maxWidth = imgPos.width;
+                maxImgPos = imgPos;
+            }
+        });
+        return maxImgPos;
+    }
+
+</script>
+{% endblock onreadyBlock %}
