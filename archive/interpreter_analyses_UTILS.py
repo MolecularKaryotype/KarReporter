@@ -1,5 +1,5 @@
 from KarUtils.read_OMKar_output import *
-from format_report import *
+from generate_content import *
 from KarUtils.utils import *
 
 import os

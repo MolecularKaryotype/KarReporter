@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block content %}
+
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<style>
+    /*fonts*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Regular.ttf') format('truetype');*/
+    /*    font-weight: 400;*/
+    /*    font-style: normal;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Italic.ttf') format('truetype');*/
+    /*    font-weight: 400;*/
+    /*    font-style: italic;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-Bold.ttf') format('truetype');*/
+    /*    font-weight: 700;*/
+    /*    font-style: normal;*/
+    /*}*/
+    /*@font-face {*/
+    /*    font-family: 'Lato';*/
+    /*    src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');*/
+    /*    font-weight: 700;*/
+    /*    font-style: italic;*/
+    /*}*/
+
+    body {
+        font-size: 14.4px;
+        font-family: 'Lato', sans-serif;
+        /*transform: scale(0.8); !* Scale the body content to 80% *!*/
+        /*transform-origin: top left; !* Scale from the top-left corner *!*/
+        /*width: 125%; !* Compensate for the scaling to prevent horizontal scrollbar *!*/
+        /*height: 125%; !* Compensate for the scaling to prevent vertical scrollbar *!*/
+    }
+    .h1-font {
+        font-size: 2.05em;
+    }
+    .h2-font {
+        font-size: 1.75em;
+    }
+    .h3-font {
+        font-size: 1.55em;
+    }
+    .h4-font {
+        font-size: 1.25em;
+    }
+    .h5-font {
+        font-size: 1.1em;
+    }
+    .h6-font {
+        font-size: 1em;
+    }
+
+    /*containers*/
+    .dashboard-master-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-top: 1.25em;
+      margin-bottom: 1.25em;
+    }
+    .dashboard-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .background-shading {
+        background-color: #f6f6fa;
+        border-radius: 1em;
+    }
+
+    /*images*/
+    .summary-image-preview {
+        z-index: 5;
+        width: 6rem;
+        cursor: pointer;
+    }
+    .img-zoom-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .img-zoom-overlay img {
+        max-width: 90%;
+        max-height: 90%;
+        object-fit: contain;
+    }
+</style>
+
+
+<!-- Create the dashboard table here -->
+
+<div class="dashboard-master-container">
+  <div class="dashboard-container">
+    <p class="h1-font" style="font-weight:bold; margin-top:0.75em; padding-left: 0.5em">Dashboard</p>
+    <div class="segment-table-container background-shading" style="padding: 1.25em;">
+      <table id="dashboard-table" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
+          <thead class="h4-font">
+                <th class="dt-head-left">Sample</th>
+                <th class="dt-head-left"># Chromosomal Clusters</th>
+                <th class="dt-head-left">Sample Complexity</th>
+                <th class="dt-head-left">Events Summary</th>
+                <th class="dt-head-left">Karyotype Plot</th>
+              </tr>
+          </thead>
+            <tbody class="h5-font">
+              {% for filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image in content %}
+              {% set sample_id = loop.index %}
+              <tr>
+                <td class="dt-body-left">
+                  <a class="yoo-table-icon-title" href="{{filename}}.html" target="_blank">{{filename}}</a>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{cluster}}</p>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{ case_complexity }}</p>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{ case_event_type_report }}</p>
+                </td>
+                <td class="dt-body-center">
+                  <img id="summary-image-{{ sample_id }}" src="karyotypes/{{summary_preview_image}}" class="img-fluid summary-image-preview">
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div id="image-zoom-overlay" class="img-zoom-overlay">
+    <img id="overlay-image" src="" alt="Zoomed Image">
+</div>
+
+{% endblock content %}
+
+{% block onreadyBlock %}
+<script>
+  // dynamic width-ratio
+    function updateMaxWidth() {
+        const container = document.querySelector('.dashboard-container');
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const aspectRatio = viewportWidth / viewportHeight;
+
+        if (viewportWidth >= 1280) {
+            // Calculate width based on aspect ratio
+            const maxWidth = Math.min(viewportWidth, (1.4 / aspectRatio) * viewportWidth);
+            console.log('Viewport Width:', viewportWidth);
+            console.log('Aspect Ratio:', aspectRatio);
+            console.log('Calculated Width:', maxWidth + 'px');
+            container.style.width = maxWidth + 'px';
+        } else {
+            // Full width for smaller screens
+            container.style.width = '100%';
+        }
+    }
+    updateMaxWidth();
+    window.addEventListener('resize', updateMaxWidth);
+
+    // image hover-over
+    document.addEventListener('DOMContentLoaded', function() {
+        const overlay = document.getElementById('image-zoom-overlay');
+        const overlayImage = document.getElementById('overlay-image');
+
+        document.querySelectorAll('.summary-image-preview').forEach(image => {
+            // image.addEventListener('mouseover', function() {
+            //     image.style.cursor = 'pointer';
+            // });
+            image.addEventListener('click', function() {
+                overlayImage.src = this.src.replace("_preview", "");
+                overlay.style.display = 'flex';
+            });
+
+            // image.addEventListener('mouseout', function() {
+            //     overlay.style.display = 'none';
+            //     overlayImage.src = '';
+            // });
+        });
+
+        // Close the overlay when clicking anywhere else
+        window.addEventListener('click', function(event) {
+            if (!event.target.classList.contains('summary-image-preview')) {
+                overlay.style.display = 'none';
+                overlayImage.src = '';
+            }
+        });
+    });
+</script>
+{% endblock onreadyBlock %}

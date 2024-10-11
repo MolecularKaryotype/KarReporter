@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_genes_in_region(chrom, start, end, gene_file='Metadata/gtf_protein_coding.bed'):
+def get_genes_in_region(chrom, start, end, gene_file='KarUtils/Metadata/gtf_protein_coding.bed'):
     """
     report all genes with intersection with the region (inclusive)
     :param chrom: chr{1-22, X, Y}
@@ -21,7 +21,7 @@ def get_genes_in_region(chrom, start, end, gene_file='Metadata/gtf_protein_codin
     return intersection_gene_df['gene'].tolist()
 
 
-def get_DDG_overlapped_genes(input_gene_list, DDG_file='Metadata/DDG2P_14_11_2023.csv'):
+def get_DDG_overlapped_genes(input_gene_list, DDG_file='KarUtils/Metadata/DDG2P_14_11_2023.csv'):
     DDG_df = pd.read_csv(DDG_file, sep='\t')
     overlapped_gene_df = DDG_df[DDG_df['gene symbol'].isin(input_gene_list)]
     return overlapped_gene_df
@@ -59,7 +59,7 @@ def test_if_DDG_has_duplicate():
     print(overlapping_rows)
 
 
-def get_band_location(chrom, nt_idx, cyto_file='Metadata/cytoBand.txt'):
+def get_band_location(chrom, nt_idx, cyto_file='KarUtils/Metadata/cytoBand.txt'):
     cyto_df = pd.read_csv(cyto_file, sep='\t', header=None, names=['chrom', 'start', 'end', 'band_name', 'stain'])
     chrom = chrom[:3].lower() + chrom[3:]
     for index, row in cyto_df.iterrows():

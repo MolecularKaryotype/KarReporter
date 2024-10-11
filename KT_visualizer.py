@@ -5,9 +5,7 @@ import colorsys
 from PIL import Image
 import math
 
-# from KT_interpreter import *
-from KarUtils.utils import *
-from KarUtils.Structures import *
+from KarUtils import *
 
 
 def reduce_saturation(color, factor):
@@ -62,6 +60,7 @@ BAND_SATURATION = 1
 BAND_ALPHA = 0.85
 BAND_TEXT_WEIGHT = 'normal'
 ORIGIN_ALPHA = 0.7
+MIN_LEN_BAND_LABEL = 1
 
 TICK_MARKING_X_OFFSET = 0.25  # helps to center the tickmarkings
 TICK_LEN = 0.2
@@ -78,7 +77,7 @@ LABEL_BAR_THICKNESS = 1.25
 LABEL_BAR_ALPHA = 1
 LABEL_MARK_ALPHA = 1
 
-BAND_FONTSIZE = 3
+BAND_FONTSIZE = 4.2
 LABEL_MARK_FONTSIZE = 6
 CHR_HEADER_HIGHLIGHT_FONTSIZE = 12
 CHR_HEADER_FONTSIZE = 7
@@ -103,7 +102,9 @@ color_mapping = {
     'gpos100': 'black',  # full black
     'acen': 'red',  # centromere
     'gvar': 'blue',  # variable region
-    'stalk': '#87CEEB'  # light blue (skyblue)
+    'stalk': '#87CEEB',  # light blue (skyblue)
+    'alt1': '#dddddd',
+    'alt2': '#aaaaaa'
 }
 chr_color_mapping = {
     '1': '#73a9a3',
@@ -136,7 +137,18 @@ chr_color_mapping = {
 reduced_saturation_mapping = {k: reduce_saturation(v, BAND_SATURATION) for k, v in color_mapping.items()}
 
 
-def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling):
+def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_show_event_number=True, max_label_each_line=MAX_LABEL_EACH_LINE, **kwargs):
+    ## overwrite variables
+    global CHR_HEADER_HIGHLIGHT_FONTSIZE, CHR_HEADER_FONTSIZE, CHR_HEADER_Y_OFFSET, CHR_HEADER_HIGHLIGHT_Y_OFFSET
+    if 'CHR_HEADER_HIGHLIGHT_FONTSIZE' in kwargs:
+        CHR_HEADER_HIGHLIGHT_FONTSIZE = kwargs['CHR_HEADER_HIGHLIGHT_FONTSIZE']
+    if 'CHR_HEADER_FONTSIZE' in kwargs:
+        CHR_HEADER_FONTSIZE = kwargs['CHR_HEADER_FONTSIZE']
+    if 'CHR_HEADER_Y_OFFSET' in kwargs:
+        CHR_HEADER_Y_OFFSET = kwargs['CHR_HEADER_Y_OFFSET']
+    if 'CHR_HEADER_HIGHLIGHT_Y_OFFSET' in kwargs:
+        CHR_HEADER_HIGHLIGHT_Y_OFFSET = kwargs['CHR_HEADER_HIGHLIGHT_Y_OFFSET']
+
     ## Chrom header
     ax.text(x_offset, y_offset + CHR_HEADER_Y_OFFSET, chromosome_data['name'],
             va='bottom', fontsize=CHR_HEADER_FONTSIZE, rotation=90, weight='bold')
@@ -153,23 +165,10 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling):
         chrom_bands = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET, y_offset + CHR_BAND_Y_OFFSET), end - start, BAND_WIDTH,
                                         linewidth=1, edgecolor='black', facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
         ax.add_patch(chrom_bands)
-        if end - start > (1 / len_scaling):
+        if end - start > (MIN_LEN_BAND_LABEL / len_scaling):
             # do not label band that are too narrow
             ax.text(x_offset + (start + end) / 2 + CHR_HEADER_X_OFFSET, y_offset + BAND_WIDTH / 2 + CHR_BAND_MARK_Y_OFFSET, name,
                     ha='center', va='center', fontsize=BAND_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT)
-
-    # ## Origins
-    # for origin in chromosome_data['origins']:
-    #     start = origin['start']
-    #     end = origin['end']
-    #     name = origin['name']
-    #     color = chr_color_mapping[name]
-    #     text_color = get_text_color(color)
-    #     origin_bands = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET, y_offset + ORIGIN_Y_OFFSET), end - start, ORIGIN_WIDTH,
-    #                                      linewidth=1, edgecolor='black', facecolor=color, alpha=ORIGIN_ALPHA, lw=ORIGIN_RECT_LINEWIDTH)
-    #     ax.add_patch(origin_bands)
-    #     ax.text(x_offset + (start + end) / 2 + CHR_HEADER_X_OFFSET, y_offset + ORIGIN_Y_OFFSET + ORIGIN_WIDTH / 2 + ORIGIN_MARK_Y_OFFSET, name,
-    #             ha='center', va='center', fontsize=ORIGIN_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT)
 
     ## Orientations Contig
     for contig in chromosome_data['orientation_contigs']:
@@ -248,8 +247,11 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling):
         ## format label-text
         labels = []
         for label_idx, label_itr in enumerate(sv_label['label']):
-            label_header = label_itr.split(']')[0] + ']'
-            if label_idx != len(sv_label['label']) - 1 and (label_idx + 1) % MAX_LABEL_EACH_LINE == 0:
+            if only_show_event_number:
+                label_header = label_itr.split(']')[0] + ']'
+            else:
+                label_header = f"[{label_itr.split(']')[1]}]"
+            if label_idx != len(sv_label['label']) - 1 and (label_idx + 1) % max_label_each_line == 0:
                 label_header += '\n'
             labels.append(label_header)
         label = ''.join(labels)
@@ -277,7 +279,7 @@ def rotate_image(input_image_path, output_image_path):
         rotated_img.save(output_image_path)
 
 
-def generate_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
+def generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
     index_to_segment_dict = reverse_dict(segment_to_index_dict)
     cyto_path = create_cytoband_path()
     vis_input = []
@@ -289,6 +291,74 @@ def generate_visualizer_input(events, aligned_haplotypes, segment_to_index_dict)
                    'name': hap.chrom,  # remove/reassign
                    'length': get_chr_length(segment_list),
                    'bands': label_cytoband(segment_list, cyto_path),
+                   'orientation_contigs': get_orientation_contigs(segment_list),
+                   'highlight': chr_is_highlighted(events, hap.id),
+                   'sv_labels': []}
+        vis_input.append(c_entry)
+    assign_sv_labels(events, vis_input, index_to_segment_dict)
+
+    return vis_input
+
+
+def generate_segment_visualizer_input(events, aligned_haplotypes, segment_to_index_dict,
+                                      label_centromere=False,
+                                      forbidden_region_file=get_metadata_file_path('acrocentric_telo_cen.bed')):
+    ## make fixed color mapping for each segment
+    all_indexed_segs = set()
+    for hap in aligned_haplotypes:
+        all_indexed_segs.update(set([x[:-1] for x in hap.mt_hap]))
+    all_indexed_segs = sorted(list(all_indexed_segs), key=int)
+
+    alternating_stain = ['alt1', 'alt2']  # alternate adjacent bands by two stains
+    seg_color_mapping = {}
+    stain_idx = 0
+    if label_centromere:
+        index_to_segment_dict = reverse_dict(segment_to_index_dict)
+        centromere_boundaries = get_centromere_boundaries(forbidden_region_file)
+        for seg in all_indexed_segs:
+            seg_obj = index_to_segment_dict[int(seg)]
+            if seg_intersect_boundaries(centromere_boundaries, seg_obj):
+                seg_color_mapping[seg] = 'acen'
+            else:
+                seg_color_mapping[seg] = alternating_stain[stain_idx]
+                stain_idx = (stain_idx + 1) % len(alternating_stain)
+    else:
+        for seg in all_indexed_segs:
+            seg_color_mapping[seg] = alternating_stain[stain_idx]
+            stain_idx = (stain_idx + 1) % len(alternating_stain)
+
+    def label_segment_for_segmentview(typed_segment_list, indexed_segment_list):
+        """
+        for a single aligned haplotype, generate the segment-view "band" patterns
+        @param typed_segment_list:
+        @param indexed_segment_list:
+        @return:
+        """
+        if len(typed_segment_list) != len(indexed_segment_list):
+            raise RuntimeError()
+
+        bands = []
+        c_len = 0
+        for (typed_segment, indexed_segment) in zip(typed_segment_list, indexed_segment_list):
+            seg_len = len(typed_segment) / 1e6  # scale by Mbp
+            c_band = {'band': indexed_segment,
+                      'start': c_len,
+                      'end': c_len + seg_len,
+                      'stain': seg_color_mapping[indexed_segment[:-1]]}
+            c_len += seg_len
+            bands.append(c_band)
+        return bands
+
+    index_to_segment_dict = reverse_dict(segment_to_index_dict)
+    vis_input = []
+    for hap_idx, hap in enumerate(aligned_haplotypes):
+        segment_list = indexed_segments_to_typed_segments(hap.mt_hap, index_to_segment_dict)
+        c_entry = {'hap_id': hap.id,
+                   'segment_list': hap.mt_hap,  # this remains un-altered
+                   'chr': hap.chrom,
+                   'name': hap.chrom,  # remove/reassign
+                   'length': get_chr_length(segment_list),
+                   'bands': label_segment_for_segmentview(segment_list, hap.mt_hap),
                    'orientation_contigs': get_orientation_contigs(segment_list),
                    'highlight': chr_is_highlighted(events, hap.id),
                    'sv_labels': []}
@@ -332,7 +402,6 @@ def get_orientation_contigs(segment_list):
     return orientation_contigs
 
 
-
 def chr_is_highlighted(input_events, hap_id):
     for event_info in input_events:
         for block in event_info[2]:
@@ -354,9 +423,9 @@ def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict):
                          'deletion': 'DEL',
                          'inversion': 'INV',
                          'tandem_duplication': 'DUP',
-                         'left_duplication_inversion': "DUPINV",
-                         'right_duplication_inversion': 'DUPINV',
-                         'balanced_translocation': 'TRANS'}
+                         'left_duplication_inversion': "DUPI",
+                         'right_duplication_inversion': 'DUPI',
+                         'balanced_translocation': 'T'}
 
     def find_and_assign_single_label(path_id, indexed_seg, label_str):
         path_found = False
@@ -435,7 +504,7 @@ def indexed_segments_to_typed_segments(indexed_segment_list, index_to_segment_di
     return typed_segment_list
 
 
-def create_cytoband_path(cyto_file='Metadata/hg38_400_level_cytoband_updated.tsv'):
+def create_cytoband_path(cyto_file='KarUtils/Metadata/hg38_400_level_cytoband_updated.tsv'):
     segment_list = []
     with open(cyto_file) as fp_read:
         fp_read.readline()
@@ -654,7 +723,7 @@ def test_artificial_chr_image():
     for chrom_idx, i_chromosome_data in enumerate(chromosomes_data):
         row = chrom_idx // 4
         col = chrom_idx % 4
-        plot_chromosome(i_ax, i_chromosome_data, y_offset=col * 3, x_offset=row * 28)
+        plot_chromosome(i_ax, i_chromosome_data, col * 3, row * 28, 1.0, only_show_event_number=False)
 
     # plt.show(bbox_inches='tight')
     plt.savefig('test_fig.png', bbox_inches='tight')
@@ -662,13 +731,19 @@ def test_artificial_chr_image():
     rotate_image('test_fig.png', 'test_fig_rotated.png')
 
 
-def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
+
+##########################IO###########################
+
+def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale, output_svg=False, output_pdf=False):
     plt.rcParams['figure.dpi'] = IMAGE_DPI
 
-    if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
-        scaled_image_length = (i_max_length / 200) * 8 * param_image_len_scale
-    else:
-        scaled_image_length = (MAX_CHR_LEN_IF_NO_SCALE / 200) * 8 * param_image_len_scale
+    # if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
+    #     scaled_image_length = (i_max_length / 200) * 8 * param_image_len_scale
+    # else:
+    #     scaled_image_length = (MAX_CHR_LEN_IF_NO_SCALE / 200) * 8 * param_image_len_scale
+
+    ## now, all images are of the same length
+    scaled_image_length = (MAX_CHR_LEN_IF_NO_SCALE / 200) * 8 * param_image_len_scale
 
     n_chrom = len(vis_input)
     if n_chrom <= 4:
@@ -678,19 +753,24 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
     fig, i_ax = plt.subplots(figsize=(scaled_image_length, image_width))
 
     ## Scale all Chr in the cluster if at least one Chr is too long to fit
-    if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
-        chr_len_scaling = 1
-    else:
-        chr_len_scaling = MAX_CHR_LEN_IF_NO_SCALE / i_max_length
-        for vis in vis_input:
-            apply_scaling_to_vis(vis, chr_len_scaling)
+    # if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
+    #     chr_len_scaling = 1
+    # else:
+    #     chr_len_scaling = MAX_CHR_LEN_IF_NO_SCALE / i_max_length
+    #     for vis in vis_input:
+    #         apply_scaling_to_vis(vis, chr_len_scaling)
+
+    ## Scale all Chr to be displayed in the same sized box
+    chr_len_scaling = MAX_CHR_LEN_IF_NO_SCALE / i_max_length
+    for vis in vis_input:
+        apply_scaling_to_vis(vis, chr_len_scaling)
 
     ## Merge SV-labels if they are too close
     for vis in vis_input:
         merge_sv_labels(vis, SV_LABEL_MIN_DISTANCE / chr_len_scaling)
 
     ## Limit chrom plot size
-    i_ax.set_xlim(0, min(i_max_length, MAX_CHR_LEN_IF_NO_SCALE) + CHR_HEADER_X_OFFSET + 1.5)
+    i_ax.set_xlim(0, min(i_max_length * chr_len_scaling, MAX_CHR_LEN_IF_NO_SCALE) + CHR_HEADER_X_OFFSET + 1.5)
     if n_chrom <= 4:
         ylim = 16
     elif n_chrom <= 8:
@@ -718,12 +798,103 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale):
     for chrom_idx, i_chromosome_data in enumerate(vis_input):
         row = chrom_idx // 4
         col = chrom_idx % 4
-        plot_chromosome(i_ax, i_chromosome_data, Y_INIT + col * Y_CONST, row * 28, chr_len_scaling)
+        plot_chromosome(i_ax, i_chromosome_data, Y_INIT + col * Y_CONST, row * 28, chr_len_scaling,
+                        CHR_HEADER_HIGHLIGHT_FONTSIZE=12,
+                        CHR_HEADER_FONTSIZE=7,
+                        CHR_HEADER_Y_OFFSET=1.8,
+                        CHR_HEADER_HIGHLIGHT_Y_OFFSET=1.15)
 
-    plt.savefig(output_prefix + '.png', bbox_inches='tight')
+    plt.savefig(output_prefix + '.png', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)  # change to SVG for manualscript-prep
+    if output_svg:
+        plt.savefig(output_prefix + '.svg', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
+    if output_pdf:
+        plt.savefig(output_prefix + '.pdf', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
     plt.close()
     rotate_image(output_prefix + '.png', output_prefix + '_rotated.png')
 
+def make_summary_image(file_header, vis_input, output_prefix):
+    plt.rcParams['figure.dpi'] = 300
+    MAX_CHR_PER_ROW = 24
+    ## overwrites ##
+    CHR_HEADER_HIGHLIGHT_FONTSIZE = 18
+    CHR_HEADER_FONTSIZE = 11
+    WHOLE_CHR_Y_OFFSET = 2
+    CHR_HEADER_Y_OFFSET = -0.4 + WHOLE_CHR_Y_OFFSET
+    CHR_HEADER_HIGHLIGHT_Y_OFFSET = -1.2 + WHOLE_CHR_Y_OFFSET
+    ################
+    Y_CONST = 5.5  # adjust the distance between chromosomes
+    n_chrom = len(vis_input)
+    current_chr_idx = 0
+    current_fig_idx = 0
+    while current_chr_idx < n_chrom:
+        ## no scaling for the summary view, and all chromosomes are on the same relative scale
+        current_vis_input = [vis_input[i] for i in range(current_chr_idx, min(current_chr_idx + MAX_CHR_PER_ROW, n_chrom))]
+        current_chr_length = max_chr_length(current_vis_input)
+        if current_fig_idx == 0:
+            img_x = (current_chr_length / 200) * 8 * IMG_LENGTH_SCALE_VERTICAL_SPLIT + 0.72  # for file_header
+        else:
+            img_x = (current_chr_length / 200) * 8 * IMG_LENGTH_SCALE_VERTICAL_SPLIT
+        img_y = MAX_CHR_PER_ROW * (Y_CONST / 4)
+        fig, i_ax = plt.subplots(figsize=(img_x, img_y))  # set up image aspect ratio
+        for vis in current_vis_input:
+            merge_sv_labels(vis, SV_LABEL_MIN_DISTANCE)
+        if current_fig_idx == 0:
+            i_ax.set_xlim(0, current_chr_length + CHR_HEADER_X_OFFSET + 1.5 + 20)  # set up x-grid (AU)
+        else:
+            i_ax.set_xlim(0, current_chr_length + CHR_HEADER_X_OFFSET + 1.5)
+        i_ax.set_ylim(0, img_y * 4)  # set up y-grid (AU)
+        i_ax.axis('off')  # turn on for debugging plotting location
+        if current_fig_idx == 0:
+            x_offset = 10
+            i_ax.text(0, 0.5, f"sample: {file_header}",
+                    va='bottom', fontsize=15, rotation=90, weight='bold')
+        else:
+            x_offset = 0
+        for chrom_idx, i_chromosome_data in enumerate(current_vis_input):
+            plot_chromosome(i_ax, i_chromosome_data, chrom_idx * Y_CONST + 1.5, x_offset, 1,
+                            only_show_event_number=False,
+                            CHR_HEADER_HIGHLIGHT_FONTSIZE=CHR_HEADER_HIGHLIGHT_FONTSIZE,
+                            CHR_HEADER_FONTSIZE=CHR_HEADER_FONTSIZE,
+                            CHR_HEADER_Y_OFFSET=CHR_HEADER_Y_OFFSET,
+                            CHR_HEADER_HIGHLIGHT_Y_OFFSET=CHR_HEADER_HIGHLIGHT_Y_OFFSET)
+        plt.savefig(f"{output_prefix}_split{current_fig_idx}.png", bbox_inches='tight', dpi=300, transparent=True)
+        plt.close()
+        rotate_image(f"{output_prefix}_split{current_fig_idx}.png", f"{output_prefix}_split{current_fig_idx}_rotated.png")
+        current_chr_idx += len(current_vis_input)
+        current_fig_idx += 1
+
+    # merge images
+    image_paths = [f"{output_prefix}_split{i}_rotated.png" for i in range(current_fig_idx)]  # already in the right order
+    output_path = f"{output_prefix}_merged_rotated.png"
+    preview_output_path = f"{output_prefix}_merged_rotated_preview.png"
+    concatenate_images_vertically(image_paths, output_path, preview_output_path)
+
+def concatenate_images_vertically(image_paths, output_path, preview_output_path):
+    # Open all images
+    images = [Image.open(image_path) for image_path in image_paths]
+    # Calculate the total height and maximum width of the final image
+    total_height = sum(image.size[1] for image in images)
+    max_width = max(image.size[0] for image in images)
+    # Create a new blank image with the calculated dimensions
+    concatenated_image = Image.new('RGB', (max_width, total_height))
+    # Paste each image onto the blank image, left-aligned
+    y_offset = 0
+    for image in images:
+        # If the image width is smaller than the maximum width, add padding on the right
+        if image.size[0] < max_width:
+            # Create a new image with the maximum width, filling the extra space with the background color
+            new_image = Image.new('RGB', (max_width, image.size[1]), color='#f6f6fa')
+            new_image.paste(image, (0, 0))  # Paste the original image onto the new one, left-aligned
+            image = new_image
+
+        # Paste the processed image onto the concatenated image
+        concatenated_image.paste(image, (0, y_offset))
+        y_offset += image.size[1]  # Move the offset down by the height of the image
+    # Save the final image
+    concatenated_image.save(output_path)
+    preview_resize = (int(concatenated_image.size[0] * 0.1), int(concatenated_image.size[1] * 0.1))
+    downscaled_image = concatenated_image.resize(preview_resize)
+    downscaled_image.save(preview_output_path)
 
 def merge_sv_labels(vis_entry, min_distance):
     if len(vis_entry['sv_labels']) == 0:
@@ -771,9 +942,6 @@ def apply_scaling_to_vis(vis_entry, scaling_factor):
     for band in vis_entry['bands']:
         band['start'] = band['start'] * scaling_factor
         band['end'] = band['end'] * scaling_factor
-    # for origin in vis_entry['origins']:
-    #     origin['start'] = origin['start'] * scaling_factor
-    #     origin['end'] = origin['end'] * scaling_factor
     for sv_label in vis_entry['sv_labels']:
         sv_label['pos'] = sv_label['pos'] * scaling_factor
     for orientation in vis_entry['orientation_contigs']:
@@ -783,7 +951,7 @@ def apply_scaling_to_vis(vis_entry, scaling_factor):
 
 
 if __name__ == '__main__':
-    # omkar_file_path = '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/real_case_data/dremsek_OMKar_output_paths/39.txt'
+    # omkar_file_path = '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/real_case_data/dremsek_OMKar_output_paths/dremsek_39.txt'
     # mt_indexed_lists, mt_path_chrs, segment_to_index_dict, segment_size_dict = read_OMKar_to_indexed_list(omkar_file_path)
     # mt_path_chrs = [info.split(': ')[-1] for info in mt_path_chrs]
     # wt_path_dict = generate_wt_from_OMKar_output(segment_to_index_dict)
