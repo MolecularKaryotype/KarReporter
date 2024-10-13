@@ -86,10 +86,10 @@ def get_genes_near_breakpoints(breakpoints: [(str, int)], proximity=50000):
         breakpoint_ranges.append((c_breakpoint[0],
                                   c_breakpoint[1] - proximity,
                                   c_breakpoint[1] + proximity))
-    genes_in_regions = set()
+    genes_in_regions = []
     for breakpoint_range in breakpoint_ranges:
-        genes_in_regions = genes_in_regions.union(get_genes_in_region(*breakpoint_range))
-    return list(genes_in_regions)
+        genes_in_regions += get_genes_in_region(*breakpoint_range)
+    return genes_in_regions
 
 
 def report_on_genes_based_on_breakpoints(breakpoints):
