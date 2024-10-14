@@ -5,6 +5,8 @@ import colorsys
 from PIL import Image
 import math
 
+from matplotlib.backends.backend_pdf import PdfPages
+
 from KarUtils import *
 
 
@@ -57,10 +59,13 @@ ORIGIN_WIDTH = 0.5
 ORIGIN_MARK_Y_OFFSET = 0.05
 
 BAND_SATURATION = 1
-BAND_ALPHA = 0.85
+# BAND_ALPHA = 0.85
+BAND_ALPHA = 1
 BAND_TEXT_WEIGHT = 'normal'
 ORIGIN_ALPHA = 0.7
-MIN_LEN_BAND_LABEL = 1
+# MIN_LEN_BAND_LABEL = 1
+MIN_LEN_BAND_LABEL = 0
+MIN_LEN_BAND_LABEL_TO_BLEND = 1.75
 
 TICK_MARKING_X_OFFSET = 0.25  # helps to center the tickmarkings
 TICK_LEN = 0.2
@@ -104,7 +109,9 @@ color_mapping = {
     'gvar': 'blue',  # variable region
     'stalk': '#87CEEB',  # light blue (skyblue)
     'alt1': '#dddddd',
-    'alt2': '#aaaaaa'
+    # 'alt2': '#aaaaaa',
+    # 'alt1': '#8C8C8B',
+    'alt2': '#9B9B9B'
 }
 chr_color_mapping = {
     '1': '#73a9a3',
@@ -154,21 +161,44 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_s
             va='bottom', fontsize=CHR_HEADER_FONTSIZE, rotation=90, weight='bold')
 
     ## Bands
-    for band in chromosome_data['bands']:
+    for band_idx, band in enumerate(chromosome_data['bands']):
         start = band['start']
         end = band['end']
         name = band['band']
         stain = band['stain']
         color = reduced_saturation_mapping[stain]
         text_color = get_text_color(color)
-
         chrom_bands = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET, y_offset + CHR_BAND_Y_OFFSET), end - start, BAND_WIDTH,
                                         linewidth=1, edgecolor='black', facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
+        if stain == 'acen':
+            # add bands to cover up the top and bottom band borders
+            cover_band1 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.034), 0.05, BAND_WIDTH - 0.068,
+                                           linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
+            cover_band2 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET + end - start - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.034), 0.05, BAND_WIDTH - 0.068,
+                                            linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
+            cover_band1.set_zorder(2)
+            cover_band2.set_zorder(2)
+            ax.add_patch(cover_band1)
+            ax.add_patch(cover_band2)
         ax.add_patch(chrom_bands)
         if end - start > (MIN_LEN_BAND_LABEL / len_scaling):
             # do not label band that are too narrow
-            ax.text(x_offset + (start + end) / 2 + CHR_HEADER_X_OFFSET, y_offset + BAND_WIDTH / 2 + CHR_BAND_MARK_Y_OFFSET, name,
-                    ha='center', va='center', fontsize=BAND_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT)
+            ax.text(x_offset + (start + end) / 2 + CHR_HEADER_X_OFFSET + 0.1, y_offset + BAND_WIDTH / 2 + CHR_BAND_MARK_Y_OFFSET, name,
+                    ha='center', va='center', fontsize=BAND_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT, zorder=5)
+        if end - start <= (MIN_LEN_BAND_LABEL_TO_BLEND / len_scaling):
+            ## create blending to cover the rectangle edges
+            previous_band_color = reduced_saturation_mapping[chromosome_data['bands'][band_idx - 1]['stain']] if band_idx > 0 else color
+            next_band_color = reduced_saturation_mapping[chromosome_data['bands'][band_idx + 1]['stain']] if band_idx <= len(
+                chromosome_data['bands']) - 2 else color
+            cover_band1 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.12), 0.05, BAND_WIDTH - 0.24,
+                                            linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
+            cover_band2 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET + end - start - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.12), 0.05,
+                                            BAND_WIDTH - 0.24,
+                                            linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
+            cover_band1.set_zorder(2)
+            cover_band2.set_zorder(2)
+            ax.add_patch(cover_band1)
+            ax.add_patch(cover_band2)
 
     ## Orientations Contig
     for contig in chromosome_data['orientation_contigs']:
@@ -210,7 +240,7 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_s
 
         if contig['length'] > MIN_LENGTH_SHOW_ORIGIN_NAME:
             x = x_offset + (contig['start'] + contig['end']) / 2 + CHR_HEADER_X_OFFSET
-            y = y_offset + ORIGIN_Y_OFFSET + ORIGIN_WIDTH / 2 + ORIGIN_MARK_Y_OFFSET
+            y = y_offset + ORIGIN_Y_OFFSET + ORIGIN_WIDTH / 2 + ORIGIN_MARK_Y_OFFSET - 0.05
             text_color = get_text_color(origin_color)
             ax.text(x, y, contig['origin'],
                     ha='center', va='center', fontsize=ORIGIN_FONTSIZE, color=text_color, rotation=90, weight=BAND_TEXT_WEIGHT)
@@ -736,6 +766,8 @@ def test_artificial_chr_image():
 
 def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale, output_svg=False, output_pdf=False):
     plt.rcParams['figure.dpi'] = IMAGE_DPI
+    plt.rcParams['pdf.fonttype'] = 42
+    plt.switch_backend('pdf')
 
     # if i_max_length <= MAX_CHR_LEN_IF_NO_SCALE:
     #     scaled_image_length = (i_max_length / 200) * 8 * param_image_len_scale
@@ -808,7 +840,9 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale, ou
     if output_svg:
         plt.savefig(output_prefix + '.svg', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
     if output_pdf:
-        plt.savefig(output_prefix + '.pdf', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
+        # plt.savefig(output_prefix + '.pdf', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
+        with PdfPages(output_prefix + '.pdf') as pdf:
+            pdf.savefig(fig)
     plt.close()
     rotate_image(output_prefix + '.png', output_prefix + '_rotated.png')
 
