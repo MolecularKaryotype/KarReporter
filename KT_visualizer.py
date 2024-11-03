@@ -847,7 +847,7 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale, ou
     rotate_image(output_prefix + '.png', output_prefix + '_rotated.png')
 
 def make_summary_image(file_header, vis_input, output_prefix):
-    plt.rcParams['figure.dpi'] = 300
+    plt.rcParams['figure.dpi'] = 500
     MAX_CHR_PER_ROW = 24
     ## overwrites ##
     CHR_HEADER_HIGHLIGHT_FONTSIZE = 18
@@ -926,7 +926,7 @@ def concatenate_images_vertically(image_paths, output_path, preview_output_path)
         y_offset += image.size[1]  # Move the offset down by the height of the image
     # Save the final image
     concatenated_image.save(output_path)
-    preview_resize = (int(concatenated_image.size[0] * 0.1), int(concatenated_image.size[1] * 0.1))
+    preview_resize = (int(concatenated_image.size[0] * 0.5), int(concatenated_image.size[1] * 0.5))
     downscaled_image = concatenated_image.resize(preview_resize)
     downscaled_image.save(preview_output_path)
 

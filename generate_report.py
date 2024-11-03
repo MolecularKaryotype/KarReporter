@@ -56,8 +56,33 @@ from KarUtils import *
 
 
 ### Manuscript Draft
-i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'Manuscript', \
-                                                                '0903_test_files/manuscript/input/', \
-                                                                '0903_test_files/manuscript/images/', \
-                                                                '0903_test_files/manuscript/report/'
-generate_html_report(True, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=True)
+# i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'Manuscript', \
+#                                                                 '0903_test_files/manuscript/input/', \
+#                                                                 '0903_test_files/manuscript/images/', \
+#                                                                 '0903_test_files/manuscript/report/'
+# generate_html_report(True, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=True)
+
+### Sunnyside
+# i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'Sunnyside', \
+#                                                                 'realdata/sunnyside_0926_report/postprocessed/', \
+#                                                                 'realdata/sunnyside_0926_report/images/', \
+#                                                                 'realdata/sunnyside_0926_report/report/'
+# batch_post_process_OMKar_output('/media/zhaoyang-new/workspace/sunnyside/0926_paths/', i_omkar_output_dir)
+# generate_html_report(True, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=False)
+
+### 1101 integration
+i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'Integration', \
+                                                                '1101_newer_function_integration/postprocessed/', \
+                                                                '1101_newer_function_integration/images/', \
+                                                                '1101_newer_function_integration/report1/'
+batch_post_process_OMKar_output('/media/zhaoyang-new/workspace/Molecular_Karyotype/KarReporter/1101_newer_function_integration/input1/', i_omkar_output_dir)
+generate_html_report(False, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=False)
+
+
+### 6p_dupdel
+# i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'Integration', \
+#                                                                 '/media/zhaoyang-new/workspace/Molecular_Karyotype/KarReporter/6p_dupdel/input/', \
+#                                                                 '6p_dupdel/images/', \
+#                                                                 '6p_dupdel/report/'
+# # batch_post_process_OMKar_output('/media/zhaoyang-new/workspace/Molecular_Karyotype/KarReporter/6p_dupdel/input/', i_omkar_output_dir)
+# generate_html_report(False, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=True)

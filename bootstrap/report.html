@@ -13,33 +13,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-    /*fonts*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-Regular.ttf') format('truetype');*/
-    /*    font-weight: 400;*/
-    /*    font-style: normal;*/
-    /*}*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-Italic.ttf') format('truetype');*/
-    /*    font-weight: 400;*/
-    /*    font-style: italic;*/
-    /*}*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-Bold.ttf') format('truetype');*/
-    /*    font-weight: 700;*/
-    /*    font-style: normal;*/
-    /*}*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');*/
-    /*    font-weight: 700;*/
-    /*    font-style: italic;*/
-    /*}*/
     body {
-        font-size: 14.4px;
+        font-size: 0.8rem;
         font-family: 'Lato', sans-serif;
     }
     .h1-font {
@@ -103,6 +78,13 @@
         flex-grow: 0;
     }
 
+    .cluster-header{
+        display: flex;
+        flex-direction: row; /* Aligns items from left to right */
+        justify-content: flex-start; /* Aligns items to the start */
+        gap: 2rem; /* Adds space between items */
+    }
+
     .toggle-container {
         display: flex;
         align-items: center;
@@ -129,20 +111,20 @@
 
     /*shading box*/
     .background-shading {
-        background-color: #f6f6fa;
+        background-color: #f4f4f8;
         border-radius: 1rem;
     }
     .list-group-item {
         background-color: transparent;
     }
     .accordion {
-        background-color: #f6f6fa;
+        background-color: #f4f4f8;
     }
     .accordion-item {
-        background-color: #f6f6fa;
+        background-color: #f4f4f8;
     }
     .accordion-button {
-        background-color: #f6f6fa;
+        background-color: #f4f4f8;
     }
 
     /* Slider Switch Style */
@@ -201,19 +183,19 @@
 </style>
 </head>
 
-
-
 <div id="report" class="case-master-container">
     <div class="case-container">
         <div class="left-container">
             <div class="h1-font" style="text-align:center; margin-top: 0; margin-bottom:0; font-weight: bold">Sample: {{title}}</div>
-            <div id="report_page_top" style="text-align:center"></div>
-            <div class="stacked-cluster-text-containers" style="position:relative; flex:1; margin-top:0.75rem">
+            <div class="cluster-header">
+                <div class="h2-font" id="cluster-header" style="font-weight:bold; margin-top:0.5rem"></div>
+                <div id="report_page_top" style="text-align:center"></div>
+            </div>
+            <div class="stacked-cluster-text-containers" style="position:relative; flex:1; margin-top:0rem">
                 {% for header, image1, image2, iscn, gene_report, debug_info in content %}
                     {% set cluster_id = loop.index %}
                     <div class="cluster-text-container" id="cluster-text-{{ cluster_id }}">
-                        <div class="h2-font" style="font-weight:bold; margin-top:0.5rem">{{header}}</div>
-                        <div class="clustered-sv-container background-shading" style="margin-top: 1.5rem">
+                        <div class="clustered-sv-container background-shading" style="margin-top: 0.35rem">
                             <p><div class="h3-font" style="font-weight: bold; margin-bottom:0; padding-left: 0.75rem">
                                 Clustered Structural Variants
                             </div></p>
@@ -362,7 +344,7 @@
                     {% set cluster_id = loop.index %}
                     <div class="cluster-image-container" id="cluster-image-{{ cluster_id }}">
                         <img id="image1-{{ cluster_id }}" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid image1 background-shading img-magnifier-container" style="display:block; z-index:5">
-                        <img id="image2-{{ cluster_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading" style="display:block; z-index:5">
+                        <img id="image2-{{ cluster_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading img-magnifier-container" style="display:block; z-index:5">
                     </div>
                     <img src="data:image/png;base64,{{ mag_icon }}" id="magnifying-glass-icon-img" class="magnifying-glass-icon">
                 {% endfor %}
@@ -412,6 +394,13 @@
     document.querySelectorAll('.image2').forEach(imageItr => {
         imageItr.style.display = 'none';
     });
+    let headerVal = ""
+    let contentLength = {{ content|length }}
+    function updateHeader(newHeader) {
+        headerVal = newHeader;
+        document.getElementById('cluster-header').innerText = headerVal;
+    }
+    updateHeader(`Chromosomal Cluster 1 (of ${contentLength})`)
     $(document).ready(function () {
         $(".cluster-text-container").hide()
         $(".cluster-image-container").hide()
@@ -438,15 +427,7 @@
                 $(".mag2").hide()
                 data[0].text.show()
                 data[0].image.show()
-                // const clusterImageID = data[0].image[0].id;
-                // const mag1 = document.getElementById(clusterImageID.replace('cluster-image', 'mag1'));
-                // const mag2 = document.getElementById(clusterImageID.replace('cluster-image', 'mag2'));
-                // const label = document.getElementById("sliderLabel");
-                // if (label.textContent === "Show Segment-View") {
-                //     mag1.style.display = 'block';
-                // } else {
-                //     mag2.style.display = 'block';
-                // }
+                updateHeader(`Chromosomal Cluster ${pagination.pageNumber} (of ${contentLength})`)
                 resizeGlassBackground();
             }
         });
@@ -533,7 +514,7 @@
         glass.style.backgroundImage = "url('" + img.src + "')";
         glass.style.backgroundRepeat = "no-repeat";
         glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
-        glass.style.backgroundColor = "#f6f6fa";
+        glass.style.backgroundColor = "#f4f4f8";
         glass.style.width = (img.width * magnifierSize) + "px";
         glass.style.height = (img.width * magnifierSize) + "px";
         glass.style.border = (img.width * magnifierBorder) + "px solid #000";
@@ -543,10 +524,6 @@
         glass.addEventListener("mousemove", moveMagnifier);
         img.addEventListener("mousemove", moveMagnifier);
         window.addEventListener("resize", resizeGlassBackground);  // ensure mag works with page-zooming\
-
-        /*and also for touch screens:*/
-        // glass.addEventListener("touchmove", moveMagnifier);
-        // img.addEventListener("touchmove", moveMagnifier);
 
         function showAndHideMagnifier(e) {
             let x, y, imgPos;

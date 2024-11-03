@@ -6,57 +6,27 @@
 </head>
 
 <style>
-    /*fonts*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-Regular.ttf') format('truetype');*/
-    /*    font-weight: 400;*/
-    /*    font-style: normal;*/
-    /*}*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-Italic.ttf') format('truetype');*/
-    /*    font-weight: 400;*/
-    /*    font-style: italic;*/
-    /*}*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-Bold.ttf') format('truetype');*/
-    /*    font-weight: 700;*/
-    /*    font-style: normal;*/
-    /*}*/
-    /*@font-face {*/
-    /*    font-family: 'Lato';*/
-    /*    src: url('assets/fonts/Lato-BoldItalic.ttf') format('truetype');*/
-    /*    font-weight: 700;*/
-    /*    font-style: italic;*/
-    /*}*/
-
     body {
-        font-size: 14.4px;
+        font-size: 0.8rem;
         font-family: 'Lato', sans-serif;
-        /*transform: scale(0.8); !* Scale the body content to 80% *!*/
-        /*transform-origin: top left; !* Scale from the top-left corner *!*/
-        /*width: 125%; !* Compensate for the scaling to prevent horizontal scrollbar *!*/
-        /*height: 125%; !* Compensate for the scaling to prevent vertical scrollbar *!*/
     }
     .h1-font {
-        font-size: 2.05em;
+        font-size: 2.05rem;
     }
     .h2-font {
-        font-size: 1.75em;
+        font-size: 1.75rem;
     }
     .h3-font {
-        font-size: 1.55em;
+        font-size: 1.55rem;
     }
     .h4-font {
-        font-size: 1.25em;
+        font-size: 1.25rem;
     }
     .h5-font {
-        font-size: 1.1em;
+        font-size: 1.1rem;
     }
     .h6-font {
-        font-size: 1em;
+        font-size: 1rem;
     }
 
     /*containers*/
@@ -64,8 +34,8 @@
       display: flex;
       justify-content: center;
       width: 100%;
-      margin-top: 1.25em;
-      margin-bottom: 1.25em;
+      margin-top: 1.25rem;
+      margin-bottom: 1.25rem;
     }
     .dashboard-container {
       width: 100%;
@@ -74,8 +44,8 @@
     }
 
     .background-shading {
-        background-color: #f6f6fa;
-        border-radius: 1em;
+        background-color: #f4f4f8;
+        border-radius: 1rem;
     }
 
     /*images*/
@@ -94,12 +64,24 @@
         display: none;
         justify-content: center;
         align-items: center;
-        z-index: 1000;
+        z-index: 500;
     }
     .img-zoom-overlay img {
         max-width: 90%;
         max-height: 90%;
         object-fit: contain;
+    }
+
+    /*magnifying glass effect*/
+    .img-magnifier-container {
+      position: relative;
+    }
+    .img-magnifier-glass {
+      position: absolute;
+      border-radius: 50%;
+      cursor: none;
+      z-index: 1001;
+      /*magnifier glass size is defined dynamically*/
     }
 </style>
 
@@ -108,8 +90,8 @@
 
 <div class="dashboard-master-container">
   <div class="dashboard-container">
-    <p class="h1-font" style="font-weight:bold; margin-top:0.75em; padding-left: 0.5em">Dashboard</p>
-    <div class="segment-table-container background-shading" style="padding: 1.25em;">
+    <p class="h1-font" style="font-weight:bold; margin-top:0.75rem; padding-left: 0.5rem">Dashboard</p>
+    <div class="segment-table-container background-shading" style="padding: 1.25rem;">
       <table id="dashboard-table" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
           <thead class="h4-font">
                 <th class="dt-head-left">Sample</th>
@@ -117,7 +99,6 @@
                 <th class="dt-head-left">Sample Complexity</th>
                 <th class="dt-head-left">Events Summary</th>
                 <th class="dt-head-left">Karyotype Plot</th>
-              </tr>
           </thead>
             <tbody class="h5-font">
               {% for filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image in content %}
@@ -175,33 +156,134 @@
     updateMaxWidth();
     window.addEventListener('resize', updateMaxWidth);
 
+    createGlass();
     // image hover-over
     document.addEventListener('DOMContentLoaded', function() {
         const overlay = document.getElementById('image-zoom-overlay');
         const overlayImage = document.getElementById('overlay-image');
-
+        const glassObj = document.getElementById('glass');
         document.querySelectorAll('.summary-image-preview').forEach(image => {
-            // image.addEventListener('mouseover', function() {
-            //     image.style.cursor = 'pointer';
-            // });
             image.addEventListener('click', function() {
                 overlayImage.src = this.src.replace("_preview", "");
                 overlay.style.display = 'flex';
+                console.log("overlayImage.src: ", overlayImage.src);
+                overlayImage.onload = function() {
+                    magnify(overlayImage.id, overlayImage.src);
+                }
             });
-
-            // image.addEventListener('mouseout', function() {
-            //     overlay.style.display = 'none';
-            //     overlayImage.src = '';
-            // });
         });
 
         // Close the overlay when clicking anywhere else
         window.addEventListener('click', function(event) {
             if (!event.target.classList.contains('summary-image-preview')) {
                 overlay.style.display = 'none';
+                glassObj.style.display = 'none';
                 overlayImage.src = '';
             }
         });
     });
+
+    const zoom = 2.5;
+    const magnifierSize = 0.25;
+    const magnifierBorder = magnifierSize * 0.005;
+    // ensures the maginifier works with scrolling and zooming
+    function getElementPosition(containerID) {
+        const container = document.getElementById(containerID);
+        if (!container) {
+            console.error("Element not found");
+            return;
+        }
+        // Get the bounding client rect
+        const rect = container.getBoundingClientRect();
+        // Extract and log the position and dimensions
+        const position = {
+            top: rect.top,
+            left: rect.left,
+            bottom: rect.bottom,
+            right: rect.right,
+            width: rect.width,
+            height: rect.height
+        };
+        // console.log(position);
+        return position;
+    }
+    function createGlass() {
+        let glass;
+        /* Create magnifier glass: */
+        glass = document.createElement("DIV");
+        glass.setAttribute('id', 'glass')
+        glass.setAttribute("class", "img-magnifier-glass");
+        glass.style.display = "none";
+        /* Set background properties for the magnifier glass: */
+        glass.style.backgroundRepeat = "no-repeat";
+        glass.style.backgroundColor = "#f4f4f8";
+        // glass's position is defined to be relative to img-container (instead of viewport)
+        const overlayImage = document.getElementById('overlay-image');
+        overlayImage.parentElement.insertBefore(glass, overlayImage);
+        console.log('glass created: ', glass);
+    }
+
+    function magnify(imgID, imgSrc) {
+        let img, glass;
+        img = document.getElementById(imgID);
+        glass = document.getElementById('glass');
+        console.log('magnify called, current glass: ', glass);
+        console.log('Magnifying: ', img, ' with src: ', imgSrc);
+        console.log("Image width and height: ", img.width, img.height)
+        console.log("Image offset width and height: ", img.offsetWidth, img.offsetHeight)
+        console.log("img.complete: ", img.complete)
+
+        /* resize background */
+        // img.style.cursor = "none";
+        glass.style.backgroundImage = "url('" + imgSrc + "')";
+        glass.style.backgroundSize = (img.width * zoom) + "px " + (img.height * zoom) + "px";
+        glass.style.width = (img.width * magnifierSize) + "px";
+        glass.style.height = (img.width * magnifierSize) + "px";
+        glass.style.border = (img.width * magnifierBorder) + "px solid #000";
+        glass.style.display = 'block';
+
+        /* Execute a function when someone moves the magnifier glass over the image: */
+        window.addEventListener('mousemove', showAndHideMagnifier);
+        glass.addEventListener("mousemove", moveMagnifier);
+        img.addEventListener("mousemove", moveMagnifier);
+        // window.addEventListener("resize", resizeGlassBackground);  // ensure mag works with page-zooming\
+
+        function showAndHideMagnifier(e) {
+            let x, y, imgPos;
+            x = e.clientX;
+            y = e.clientY;
+            imgPos = getElementPosition(imgID);
+            const boundaryOffset = magnifierSize / zoom;  // prevent glass freezing near boundary
+            /* Prevent the magnifier glass from being positioned outside the image: */
+            if (x < 0 || y < 0 || x < imgPos.left + boundaryOffset || x > imgPos.right - boundaryOffset || y < imgPos.top + boundaryOffset || y > imgPos.bottom - boundaryOffset) {
+                glass.style.display = "none";
+                img.style.cursor = 'default';
+            } else {
+                glass.style.display = "block";
+                img.style.cursor = 'none';
+            }
+        }
+        function moveMagnifier(e) {
+            let x, y, imgPos, magOffset;
+            /* Prevent any other actions that may occur when moving over the image */
+            e.preventDefault();
+            /* Get the cursor's x and y positions: */
+            x = e.clientX;
+            y = e.clientY;
+            magOffset = glass.offsetWidth / 2;
+            imgPos = getElementPosition(imgID);
+            /* Set the position of the magnifier glass: */
+            let x_grounded, y_grounded;
+            x_grounded = x - imgPos.left;
+            y_grounded = y - imgPos.top;
+            glass.style.left = (x_grounded - magOffset) + "px";
+            glass.style.top = (y_grounded - magOffset) + "px";
+            /* Display what the magnifier glass "sees": */
+            let backgroundX = Math.max(0, (x_grounded * zoom) - magOffset);
+            let backgroundY = Math.max(0, (y_grounded * zoom) - magOffset);
+            glass.style.backgroundPosition = "-" + backgroundX + "px -" + backgroundY + "px";
+        }
+    }
+
 </script>
 {% endblock onreadyBlock %}
