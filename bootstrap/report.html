@@ -35,6 +35,7 @@
     .h6-font {
         font-size: 1rem;
     }
+
     /*containers*/
     .case-master-container {
         display: flex;
@@ -240,20 +241,20 @@
                             <div class="accordion segment-table-container" id="omkar_reference">
                                 <div class="accordion-item">
                                     <div class="accordion-header" id="panelsStayOpen-headingOne">
-                                        <button class="h3-font accordion-button collapsed" style="padding-left:0.75rem; font-weight:bold;" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
+                                        <button class="h3-font accordion-button" style="padding-left:0.75rem; font-weight:bold;" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false" aria-controls="panelsStayOpen-collapseOne">
                                             <p style="margin:0">OMKar Output</p>
                                         </button>
                                     </div>
-                                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingOne">
+                                    <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingOne">
                                         <div class="accordion-body" style="padding: 0.75rem">
-                                            <p><div class="h4-font" style="font-weight: bold;">Paths</div></p>
+                                            <p><div class="h4-font" style="font-weight: bold;">Chromosomes</div></p>
                                             {% for mt_hap in debug_info.mt_haps %}
                                                 <p class="h4-font" style="padding-left: 1.5rem;">
                                                     {{ debug_info.IDs[loop.index - 1] }}:  {{ mt_hap }}
                                                 </p>
                                             {% endfor %}
                                             <p><div class="h4-font" style="font-weight: bold;">Segment List</div></p>
-                                            <div class="segment-table-container" style="padding-left:0.75rem; padding-right:0.75rem; padding-bottom:0.75rem;">
+                                            <div class="table-container" style="padding-left:0.75rem; padding-right:0.75rem; padding-bottom:0.75rem;">
                                                 <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0;">
                                                     <thead>
                                                         <tr class="h4-font">
@@ -282,7 +283,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="debug-table">
+                    <div id="debug-table">
                         <!--debug tables-->
                         {% if debug %}
                         <div class="accordion segment-table-container " id="wt_haps">
@@ -303,29 +304,27 @@
                                 </div>
                         </div>
                     </div>
-
-
-                    <div class="accordion segment-table-container" id="alignment">
-                        <div class="accordion-item">
-                        <h2 class="accordion-header" id="panelsStayOpen-headingThree">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseThree">
-                            alignments
-                            </button>
-                        </h2>
-                        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
-                            <div class="accordion-body">
-                                <ul class="list-group">
-                                    {% for mt_aligned in debug_info.mt_aligned %}
-                                        <li class="list-group-item"><p>{{ mt_aligned }} {{ debug_info.wt_aligned[loop.index - 1] }}</p></li>
-                                    {% endfor %}
-                                </ul>
+                        <div class="accordion segment-table-container" id="alignment">
+                            <div class="accordion-item">
+                            <h2 class="accordion-header" id="panelsStayOpen-headingThree">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseThree">
+                                alignments
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
+                                <div class="accordion-body">
+                                    <ul class="list-group">
+                                        {% for mt_aligned in debug_info.mt_aligned %}
+                                            <li class="list-group-item"><p>{{ mt_aligned }} {{ debug_info.wt_aligned[loop.index - 1] }}</p></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
                             </div>
                         </div>
-                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
                 </div>
-                    </div>
                 {% endfor %}
             </div>
         </div>
@@ -379,6 +378,7 @@
     }
     updateMaxWidth();
     window.addEventListener('resize', updateMaxWidth);
+
     const zoom = 2;
     const magnifierSize = 0.65;
     const magnifierBorder = magnifierSize * 0.02;

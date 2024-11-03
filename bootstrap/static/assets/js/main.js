@@ -18,11 +18,6 @@ $(document).ready( function () {
       pageLength: 10,
       lengthChange: false
     });
-    // new DataTable('#gene_report', {
-    //   searching: false,
-    //   pageLength: 10,
-    //   lengthChange: false
-    // });
     $('.segment').DataTable( {
       searching: false,
       pageLength: 10,
