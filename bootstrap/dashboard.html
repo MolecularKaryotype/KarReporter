@@ -183,8 +183,8 @@
         });
     });
 
-    const zoom = 2.5;
-    const magnifierSize = 0.25;
+    const zoom = 2;
+    const magnifierSize = 0.2;
     const magnifierBorder = magnifierSize * 0.005;
     // ensures the maginifier works with scrolling and zooming
     function getElementPosition(containerID) {
@@ -279,8 +279,9 @@
             glass.style.left = (x_grounded - magOffset) + "px";
             glass.style.top = (y_grounded - magOffset) + "px";
             /* Display what the magnifier glass "sees": */
-            let backgroundX = Math.max(0, (x_grounded * zoom) - magOffset);
-            let backgroundY = Math.max(0, (y_grounded * zoom) - magOffset);
+            let backgroundX = Math.max(0, (x_grounded * zoom) - magOffset * 2);
+            let backgroundY = Math.max(0, (y_grounded * zoom) - magOffset * 2);
+            console.log(`x(grounded,background): ${x}(${x_grounded},${backgroundX}); y(grounded,background): ${y}(${y_grounded},${backgroundY}); magOffset: ${magOffset}`);
             glass.style.backgroundPosition = "-" + backgroundX + "px -" + backgroundY + "px";
         }
     }
