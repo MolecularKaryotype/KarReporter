@@ -118,7 +118,7 @@ ddg2p_file = get_metadata_file_path('DDG2P_14_11_2023.csv')
 omkar_output_dir = '/media/zhaoyang-new/workspace/sunnyside/0926_paths/'
 keyhole_previously_unexplained_G2P = [889, 1251, 1294, 1301, 1404, 1544, 1562, 2081, 2085, 2243, 2245, 2249, 2254, 2276, 2280, 2281, 2282, 2283, 2284, 2327, 2335]
 keyhole_newly_found_G2P = [2081, 2276, 2280, 2281, 2282]
-mosaic_or_polyploidy = [510, 2173, 1530, 1996, 2, 459, 491, 496]
+mosaic_or_polyploidy = [510, 2173, 1530, 1996]
 debug = [2243]
 
 file_of_interest = []
@@ -136,7 +136,7 @@ for file in files:
         if int(file.split('.')[0]) not in file_of_interest:
             continue
     if skip:
-        if int(file.split('.')[0]) in skip:
+        if file.split('.')[0] in skip:
             continue
     filename = file.split('.')[0]
     file_path = omkar_output_dir + file

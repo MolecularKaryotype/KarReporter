@@ -193,7 +193,7 @@
                 <div id="report_page_top" style="text-align:center"></div>
             </div>
             <div class="stacked-cluster-text-containers" style="position:relative; flex:1; margin-top:0rem">
-                {% for header, image1, image2, iscn, gene_report, debug_info in content %}
+                {% for header, image1, image2, iscn, gene_report, debug_info, bed_rows in content %}
                     {% set cluster_id = loop.index %}
                     <div class="cluster-text-container" id="cluster-text-{{ cluster_id }}">
                         <div class="clustered-sv-container background-shading" style="margin-top: 0.35rem">
@@ -253,6 +253,20 @@
                                                     {{ debug_info.IDs[loop.index - 1] }}:  {{ mt_hap }}
                                                 </p>
                                             {% endfor %}
+                                            {% if debug %}
+                                                <p><div class="h4-font" style="font-weight: bold;">WT-haps</div></p>
+                                                {% for wt_hap in debug_info.wt_haps %}
+                                                    <p class="h4-font" style="padding-left: 1.5rem;">
+                                                        {{ debug_info.IDs[loop.index - 1] }}:  {{ wt_hap }}
+                                                    </p>
+                                                {% endfor %}
+                                                <p><div class="h4-font" style="font-weight: bold;">Alignments</div></p>
+                                                {% for wt_hap in debug_info.wt_haps %}
+                                                    <p class="h4-font" style="padding-left: 1.5rem;">
+                                                        {{ mt_aligned }} {{ debug_info.wt_aligned[loop.index - 1] }}
+                                                    </p>
+                                                {% endfor %}
+                                            {% endif %}
                                             <p><div class="h4-font" style="font-weight: bold;">Segment List</div></p>
                                             <div class="table-container" style="padding-left:0.75rem; padding-right:0.75rem; padding-bottom:0.75rem;">
                                                 <table id="segment" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0;">
@@ -283,48 +297,46 @@
                                 </div>
                             </div>
                         </div>
-                    <div id="debug-table">
-                        <!--debug tables-->
-                        {% if debug %}
-                        <div class="accordion segment-table-container " id="wt_haps">
-                            <div class="accordion-item">
-                                <h2 class="accordion-header" id="panelsStayOpen-headingTwo">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="true" aria-controls="panelsStayOpen-collapseTwo">
-                                    wt_haps
-                                    </button>
-                                </h2>
-                                <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
-                                    <div class="accordion-body">
-                                        <ul class="list-group">
-                                            {% for wt_hap in debug_info.wt_haps %}
-                                                <li class="list-group-item"><p>{{ wt_hap }}</p></li>
-                                            {% endfor %}
-                                        </ul>
+                        <div class="bed-container" style="margin-top: 0.75rem">
+                            <div class="accordion bed-table-container" id="bed_file">
+                                <div class="accordion-item">
+                                    <div class="accordion-header" id="panelsStayOpen-headingTwo">
+                                        <button class="h3-font accordion-button" style="padding-left:0.75rem; font-weight:bold;" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                                            <p style="margin:0">SV calls not incorporated</p>
+                                        </button>
+                                    </div>
+                                    <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
+                                        <div class="accordion-body" style="padding: 0.75rem">
+                                            {% if bed_rows %}
+                                            <div class="table-container" style="padding-left:0.75rem; padding-right:0.75rem; padding-bottom:0.75rem;">
+                                                <table id="bed" class="table table-bordered table-striped table-hover cell-border compact stripe bed" style="margin: 0;">
+                                                    <thead>
+                                                        <tr class="h4-font">
+                                                            {% for column in bed_header %}
+                                                                <th class="dt-head-right">{{ column }}</th>
+                                                            {% endfor %}
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {% for row in bed_rows %}
+                                                        <tr class="h5-font">
+                                                            {% for item in row %}
+                                                                <td class="dt-body-right">{{ item }}</td>
+                                                            {% endfor %}
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            {% else %}
+                                            <p class="h4-font" style="padding-left: 1.9rem; font-weight: bold;">None</p>
+                                            {% endif %}
+                                        </div>
                                     </div>
                                 </div>
-                        </div>
-                    </div>
-                        <div class="accordion segment-table-container" id="alignment">
-                            <div class="accordion-item">
-                            <h2 class="accordion-header" id="panelsStayOpen-headingThree">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="true" aria-controls="panelsStayOpen-collapseThree">
-                                alignments
-                                </button>
-                            </h2>
-                            <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
-                                <div class="accordion-body">
-                                    <ul class="list-group">
-                                        {% for mt_aligned in debug_info.mt_aligned %}
-                                            <li class="list-group-item"><p>{{ mt_aligned }} {{ debug_info.wt_aligned[loop.index - 1] }}</p></li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            </div>
                             </div>
                         </div>
-                        {% endif %}
                     </div>
-                </div>
                 {% endfor %}
             </div>
         </div>
@@ -339,7 +351,7 @@
                 </label>
             </div>
             <div class="stacked-cluster-image-containers" style="margin-top:0.75rem; position:relative; flex:1;">
-                {% for header, image1, image2, iscn, gene_report, debug_info in content %}
+                {% for header, image1, image2, iscn, gene_report, debug_info, bed_rows in content %}
                     {% set cluster_id = loop.index %}
                     <div class="cluster-image-container" id="cluster-image-{{ cluster_id }}">
                         <img id="image1-{{ cluster_id }}" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid image1 background-shading img-magnifier-container" style="display:block; z-index:5">

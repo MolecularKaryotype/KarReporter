@@ -82,11 +82,12 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     """
     os.makedirs(image_output_dir, exist_ok=True)
 
-    # one tuple per cluster (event)
+    # one tuple per cluster (event), where the output of batch_populate_html_contents is all the clusters (from all case files)
     (filenames, clusters, headers, cases_with_events,
      image1_paths, image2_paths,
      iscn_reports, genes_reports,
-     case_event_type_reports, case_complexities, summary_image_paths, summary_preview_image_paths,
+     case_event_type_reports, case_complexities, DDG2P_interruptions, DDG2P_CNV, summary_image_paths, summary_preview_image_paths,
+     bed_header, bed_rows,
      debug_outputs) = batch_populate_html_contents(data_dir, image_output_dir, file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
 
     ## summarizing number of events
@@ -119,7 +120,6 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     with open("bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
         magnifying_glass_icon = fp_read.readline().strip()
 
-
     formatted_genes_reports = [format_genes_report(genes_report) for genes_report in genes_reports]
     columns_order = ['SV', 'gene name', 'gene omim', 'rationale']
 
@@ -135,9 +135,9 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     # env = Environment(loader=FileSystemLoader('./'))
     # template = env.get_template('template.html')
     # rendered_html = template.render(title=title, content=content, columns_order=columns_order, debug=debug)
-    dashboard = [(filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image)
-                 for filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image in
-                 zip(filenames, clusters, case_event_type_reports, case_complexities, summary_image_names, summary_preview_image_names)]
+    dashboard = [(filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image)
+                 for filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image in
+                 zip(filenames, clusters, case_event_type_reports, case_complexities, DDG2P_interruptions, DDG2P_CNV, summary_image_names, summary_preview_image_names)]
     env1 = Environment(loader=FileSystemLoader('./bootstrap'))
     newtemplate = env1.get_template('dashboard.html')
     newrendered_html = newtemplate.render(title=title, content=dashboard, debug=debug)
@@ -168,13 +168,15 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         filtered_iscn = iscn_reports[start:start+cluster]
         filtered_gene_reports = formatted_genes_reports[start:start+cluster]
         filtered_debug = debug_outputs[start:start+cluster]
+        filtered_bed_rows = bed_rows[start:start+cluster]
         start = start+cluster
         report_title = filenames[index]
         index+=1
-        
-        filtered_content = [(header, image1, image2, iscn, gene_report, debug_info) for header, image1, image2, iscn, gene_report, debug_info in
-               zip(filtered_headers, filtered_images1, filtered_images2, filtered_iscn, filtered_gene_reports, filtered_debug)]
-        filtered_report = reporttemplate.render(title=report_title, content=filtered_content, columns_order=columns_order, debug=debug, mag_icon=magnifying_glass_icon)
+
+        # this is the content for each cluster
+        filtered_content = [(header, image1, image2, iscn, gene_report, debug_info, bed_row) for header, image1, image2, iscn, gene_report, debug_info, bed_row in
+               zip(filtered_headers, filtered_images1, filtered_images2, filtered_iscn, filtered_gene_reports, filtered_debug, filtered_bed_rows)]
+        filtered_report = reporttemplate.render(title=report_title, content=filtered_content, columns_order=columns_order, debug=debug, mag_icon=magnifying_glass_icon, bed_header=bed_header)
         with open(f"{output_dir}/{report_title}.html", 'w') as f:
             f.write(filtered_report)
 

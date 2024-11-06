@@ -94,14 +94,16 @@
     <div class="segment-table-container background-shading" style="padding: 1.25rem;">
       <table id="dashboard-table" class="table table-bordered table-striped table-hover cell-border compact stripe segment" style="margin: 0">
           <thead class="h4-font">
-                <th class="dt-head-left">Sample</th>
-                <th class="dt-head-left"># Chromosomal Clusters</th>
-                <th class="dt-head-left">Sample Complexity</th>
-                <th class="dt-head-left">Events Summary</th>
-                <th class="dt-head-left">Karyotype Plot</th>
+                <th class="dt-head-left" style="width:10%">Sample</th>
+                <th class="dt-head-left" style="width:10%"># Chromosomal Clusters</th>
+                <th class="dt-head-left" style="width:10%">Sample Complexity</th>
+                <th class="dt-head-left" style="width:10%">DDG2P Interruptions</th>
+                <th class="dt-head-left" style="width:10%">DDG2P CN Change</th>
+                <th class="dt-head-left" style="width:40%">Events Summary</th>
+                <th class="dt-head-left" style="width:10%">Karyotype Plot</th>
           </thead>
             <tbody class="h5-font">
-              {% for filename, cluster, case_event_type_report, case_complexity, summary_image, summary_preview_image in content %}
+              {% for filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image in content %}
               {% set sample_id = loop.index %}
               <tr>
                 <td class="dt-body-left">
@@ -112,6 +114,12 @@
                 </td>
                 <td class="dt-body-left">
                   <p class="yoo-table-icon-title">{{ case_complexity }}</p>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{ DDG2P_interruptions }}</p>
+                </td>
+                <td class="dt-body-left">
+                  <p class="yoo-table-icon-title">{{ DDG2P_CNV }}</p>
                 </td>
                 <td class="dt-body-left">
                   <p class="yoo-table-icon-title">{{ case_event_type_report }}</p>
@@ -183,8 +191,8 @@
         });
     });
 
-    const zoom = 2;
-    const magnifierSize = 0.2;
+    const zoom = 2.5;
+    const magnifierSize = 0.3;
     const magnifierBorder = magnifierSize * 0.005;
     // ensures the maginifier works with scrolling and zooming
     function getElementPosition(containerID) {

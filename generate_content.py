@@ -360,11 +360,29 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
     genes_reports = []
     case_event_type_reports = []
     case_complexities = []
+    DDG2P_interruptions = []
+    DDG2P_CNV = []
     debug_outputs = []  # list of dicts [{'segs': [], 'mt_haps': [], 'wt_haps': []}]
-    files = [file for file in os.listdir(omkar_output_dir)]
-    # files = sorted(files, key=int_file_keys)
-    for file in files:
+    folders = [dir for dir in os.listdir(omkar_output_dir)]
+    bed_header = []
+    bed_rows = []
+    for folder in folders:
+        file = f"{folder}/{folder}.txt"
+        bed_filepath = f"{omkar_output_dir}/{folder}/{folder}_SV.bed"
+
+        ## parse bed file
+        bed_df = pd.read_csv(bed_filepath, sep='\t')
+        if not bed_header:
+            bed_header = bed_df.columns.tolist()
+        else:
+            # check all bed has same col-headers
+            c_bed_header = bed_df.columns.tolist()
+            if c_bed_header != bed_header:
+                raise RuntimeError('inconsistent bed headers across outputs')
+
         file_event_type_reports = []
+        file_DDG2P_interruptions = 0
+        file_DDG2P_CNV = 0
         if file_of_interest is not None:
             if file.split('.')[0] not in file_of_interest:
                 continue
@@ -419,6 +437,18 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
 
             c_aligned_haplotypes = [aligned_haplotypes[i] for i in hap_idx_to_plot]
 
+            ## filter bed table to only keep the rows with the corrsponding Chr
+            chr_numbers = []
+            for chr_itr in event_chr:
+                if chr_itr[3:].lower() == 'x':
+                    chr_numbers.append(23)
+                elif chr_itr[3:].lower() == 'y':
+                    chr_numbers.append(24)
+                else:
+                    chr_numbers.append(int(chr_itr[3:]))
+            filtered_bed_df = bed_df[bed_df['chromosome'].isin(chr_numbers)]
+            bed_rows.append(filtered_bed_df.values.tolist())
+
             ## generate report text
             c_events = sort_events(c_events)
             iscn_events, genes_report, event_type_reports = format_report(c_events, aligned_haplotypes, index_to_segment_dict, debug=debug)
@@ -452,6 +482,11 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             iscn_reports.append(iscn_events)
             genes_reports.append(genes_report)
             file_event_type_reports.append(event_type_reports)
+            ## count the number of DDG2P genes interruption in each category
+            for sv_gene_report in genes_report:
+                file_DDG2P_interruptions += len(sv_gene_report['bp_genes_highlight'])
+                file_DDG2P_CNV += len(sv_gene_report['cnv_genes_highlight'])
+
 
             ## generate debug output
             debug_segs = set()
@@ -489,11 +524,14 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
         event_multiplicity_str, cluster_complexity = parse_event_multiplicities(file_event_type_reports)
         case_event_type_reports.append(event_multiplicity_str)
         case_complexities.append(cluster_complexity)
+        DDG2P_interruptions.append(file_DDG2P_interruptions)
+        DDG2P_CNV.append(file_DDG2P_CNV)
         
     return (filenames, clusters, headers, cases_with_events,
             image1_paths, image2_paths,
             iscn_reports, genes_reports,
-            case_event_type_reports, case_complexities, summary_image_paths, summary_preview_image_paths,
+            case_event_type_reports, case_complexities, DDG2P_interruptions, DDG2P_CNV, summary_image_paths, summary_preview_image_paths,
+            bed_header, bed_rows,
             debug_outputs)
 
 

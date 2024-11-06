@@ -23,6 +23,11 @@ $(document).ready( function () {
       pageLength: 10,
       lengthChange: false
     });
+    $('.bed').DataTable( {
+      searching: false,
+      pageLength: 10,
+      lengthChange: false
+    });
     //TODO fix this part
     // $(".container").hide();
     // $('.report_page_top,.report_page_bottom').bootpag({

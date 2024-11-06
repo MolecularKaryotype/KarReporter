@@ -72,10 +72,10 @@ from KarUtils import *
 
 ### 1101 integration
 i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'Integration', \
-                                                                '1101_newer_function_integration/postprocessed/', \
+                                                                '1101_newer_function_integration/input3/', \
                                                                 '1101_newer_function_integration/images/', \
-                                                                '1101_newer_function_integration/report1/'
-batch_post_process_OMKar_output('/media/zhaoyang-new/workspace/Molecular_Karyotype/KarReporter/1101_newer_function_integration/input1/', i_omkar_output_dir)
+                                                                '1101_newer_function_integration/report3/'
+# batch_post_process_OMKar_output('1101_newer_function_integration/input2/', i_omkar_output_dir)
 generate_html_report(False, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=False)
 
 
