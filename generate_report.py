@@ -72,11 +72,11 @@ from KarUtils import *
 
 ### 1101 integration
 i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir = 'Integration', \
-                                                                '1101_newer_function_integration/input3/', \
-                                                                '1101_newer_function_integration/images/', \
-                                                                '1101_newer_function_integration/report3/'
+                                                                '/Users/zhaoyangjia/Data/dremsek_1106_output/', \
+                                                                '1101_newer_function_integration/images_dremsek/', \
+                                                                '1101_newer_function_integration/dremsek/'
 # batch_post_process_OMKar_output('1101_newer_function_integration/input2/', i_omkar_output_dir)
-generate_html_report(False, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=False)
+generate_html_report(True, None, i_title, i_omkar_output_dir, i_image_output_dir, i_output_dir, debug=False)
 
 
 ### 6p_dupdel

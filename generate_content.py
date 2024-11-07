@@ -389,7 +389,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
         if skip is not None:
             if file.split('.')[0] in skip:
                 continue
-        filename = file.split('.')[0]
+        filename = file.split('/')[-1].split('.')[0]
         filenames.append(filename)
         file_path = omkar_output_dir + file
         print(file)
