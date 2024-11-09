@@ -1,12 +1,13 @@
 from random import sample
-
 from jinja2 import Environment, FileSystemLoader
 import base64
 import os
 import shutil
-from generate_content import *
-from KarUtils import *
 import copy
+
+
+from .generate_content import *
+from .KarUtils import *
 
 
 def image_to_base64(image_path):
@@ -81,6 +82,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     @return: N/a
     """
     os.makedirs(image_output_dir, exist_ok=True)
+    kr_dir = os.path.dirname(os.path.abspath(__file__))
 
     # one tuple per cluster (event), where the output of batch_populate_html_contents is all the clusters (from all case files)
     (filenames, clusters, headers, cases_with_events,
@@ -117,7 +119,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         shutil.copy(img, output_dir + "/karyotypes/")
     summary_image_names = [img.split('/')[-1] for img in summary_image_paths]
     summary_preview_image_names = [img.split('/')[-1] for img in summary_preview_image_paths]
-    with open("bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
+    with open(f"{kr_dir}/bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
         magnifying_glass_icon = fp_read.readline().strip()
 
     formatted_genes_reports = [format_genes_report(genes_report) for genes_report in genes_reports]
@@ -138,7 +140,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     dashboard = [(filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image)
                  for filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image in
                  zip(filenames, clusters, case_event_type_reports, case_complexities, DDG2P_interruptions, DDG2P_CNV, summary_image_names, summary_preview_image_names)]
-    env1 = Environment(loader=FileSystemLoader('./bootstrap'))
+    env1 = Environment(loader=FileSystemLoader(f'{kr_dir}/bootstrap'))
     newtemplate = env1.get_template('dashboard.html')
     newrendered_html = newtemplate.render(title=title, content=dashboard, debug=debug)
 
@@ -148,7 +150,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         #Copy the static folder into output folder and overwrite
     if os.path.exists(output_dir+"/static"):
         shutil.rmtree(output_dir+"/static")
-    shutil.copytree("bootstrap/static", output_dir+"/static", dirs_exist_ok=True)
+    shutil.copytree(f"{kr_dir}/bootstrap/static", output_dir+"/static", dirs_exist_ok=True)
     ###
 
     with open(output_dir+"/"+"dashboard.html", 'w') as f:

@@ -4,10 +4,9 @@ import matplotlib.colors as mcolors
 import colorsys
 from PIL import Image
 import math
-
 from matplotlib.backends.backend_pdf import PdfPages
 
-from KarUtils import *
+from .KarUtils import *
 
 
 def reduce_saturation(color, factor):
@@ -534,7 +533,7 @@ def indexed_segments_to_typed_segments(indexed_segment_list, index_to_segment_di
     return typed_segment_list
 
 
-def create_cytoband_path(cyto_file='KarUtils/Metadata/hg38_400_level_cytoband_updated.tsv'):
+def create_cytoband_path(cyto_file=get_metadata_file_path('hg38_400_level_cytoband_updated.tsv')):
     segment_list = []
     with open(cyto_file) as fp_read:
         fp_read.readline()

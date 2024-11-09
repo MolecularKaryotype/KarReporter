@@ -1,4 +1,4 @@
-from KT_interpreter_html_report import *
+from .KT_interpreter_html_report import *
 from KarUtils import *
 
 

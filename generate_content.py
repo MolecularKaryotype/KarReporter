@@ -1,9 +1,9 @@
 import os
 
-from Report_Genes import *
-from KT_visualizer import *
-from KarInterpreter import *
-from KarUtils import *
+from .Report_Genes import *
+from .KT_visualizer import *
+from .KarInterpreter import *
+from .KarUtils import *
 
 
 def format_report(interpreted_events, aligned_haplotypes, index_to_segment_dict, debug=False):
@@ -335,7 +335,7 @@ def chr_range_tostr(bpa, bpb, bpa_band, bpb_band):
     return "{}-{} ({} - {})".format(format(bpa, ',d'), format(bpb, ',d'), bpa_band, bpb_band)
 
 
-def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=None, compile_image=False, debug=False, skip=None, forbidden_region_file='KarUtils/Metadata/acrocentric_telo_cen.bed'):
+def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=None, compile_image=False, debug=False, skip=None, forbidden_region_file=get_metadata_file_path('acrocentric_telo_cen.bed')):
     def vis_key(input_vis):
         chr_val = input_vis['chr'][3:]
         if chr_val == "X":
