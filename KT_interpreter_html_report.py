@@ -1,4 +1,3 @@
-from random import sample
 from jinja2 import Environment, FileSystemLoader
 import base64
 import os
