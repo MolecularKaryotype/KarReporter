@@ -925,7 +925,7 @@ def concatenate_images_vertically(image_paths, output_path, preview_output_path)
         y_offset += image.size[1]  # Move the offset down by the height of the image
     # Save the final image
     concatenated_image.save(output_path)
-    preview_resize = (int(concatenated_image.size[0] * 0.5), int(concatenated_image.size[1] * 0.5))
+    preview_resize = (int(concatenated_image.size[0] * 0.2), int(concatenated_image.size[1] * 0.2))  # downscaling previews for better performance
     downscaled_image = concatenated_image.resize(preview_resize)
     downscaled_image.save(preview_output_path)
 

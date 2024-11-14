@@ -125,7 +125,7 @@
                   <p class="yoo-table-icon-title">{{ case_event_type_report }}</p>
                 </td>
                 <td class="dt-body-center">
-                  <img id="summary-image-{{ sample_id }}" src="karyotypes/{{summary_preview_image}}" class="img-fluid summary-image-preview">
+                  <img id="summary-image-{{ sample_id }}" src="full_karyotype_images/{{summary_preview_image}}" class="img-fluid summary-image-preview">
                 </td>
               </tr>
               {% endfor %}
@@ -172,7 +172,7 @@
         const glassObj = document.getElementById('glass');
         document.querySelectorAll('.summary-image-preview').forEach(image => {
             image.addEventListener('click', function() {
-                overlayImage.src = this.src.replace("_preview", "");
+                overlayImage.src = this.src.replace("_preview", "");  // display the non-preview version (higher resolution)
                 overlay.style.display = 'flex';
                 console.log("overlayImage.src: ", overlayImage.src);
                 overlayImage.onload = function() {

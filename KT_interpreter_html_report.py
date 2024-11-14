@@ -81,6 +81,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     @return: N/a
     """
     os.makedirs(image_output_dir, exist_ok=True)
+    os.makedirs(output_dir + "/full_karyotype_images/", exist_ok=True)
     kr_dir = os.path.dirname(os.path.abspath(__file__))
 
     # one tuple per cluster (event), where the output of batch_populate_html_contents is all the clusters (from all case files)
@@ -109,13 +110,9 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
                 summary_event_counts[event_type] += event_count
     print({key: summary_event_counts[key] for key in sorted(summary_event_counts)})
 
-    images1_base64 = [image_to_base64(img) for img in image1_paths]
-    images2_base64 = [image_to_base64(img) for img in image2_paths]
-    os.makedirs(output_dir + "/karyotypes/", exist_ok=True)
-    for img in summary_image_paths:
-        shutil.copy(img, output_dir + "/karyotypes/")
-    for img in summary_preview_image_paths:
-        shutil.copy(img, output_dir + "/karyotypes/")
+    image1_names = [img.split('/')[-1] for img in image1_paths]
+    image2_names = [img.split('/')[-1] for img in image2_paths]
+
     summary_image_names = [img.split('/')[-1] for img in summary_image_paths]
     summary_preview_image_names = [img.split('/')[-1] for img in summary_preview_image_paths]
     with open(f"{kr_dir}/bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
@@ -164,8 +161,8 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     # os.makedirs(output_dir+"/cases_html", exist_ok=True)
     for cluster in clusters:
         filtered_headers = headers[start:start+cluster]
-        filtered_images1 = images1_base64[start:start+cluster]
-        filtered_images2 = images2_base64[start:start+cluster]
+        filtered_images1 = image1_names[start:start+cluster]
+        filtered_images2 = image2_names[start:start+cluster]
         filtered_iscn = iscn_reports[start:start+cluster]
         filtered_gene_reports = formatted_genes_reports[start:start+cluster]
         filtered_debug = debug_outputs[start:start+cluster]

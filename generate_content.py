@@ -405,7 +405,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, file_of_interest=N
             cases_with_events.append(filename)
 
         # summary view image
-        summary_image_prefix = "{}/{}_cytoband_summary".format(image_dir, filename)
+        summary_image_prefix = "{}/../full_karyotype_images/{}_cytoband_summary".format(image_dir, filename)
         image_path = summary_image_prefix + "_merged_rotated.png"
         preview_image_path = summary_image_prefix + "_merged_rotated_preview.png"
         relative_image_path = image_dir.replace('latex_reports/', '') + image_path.split('/')[-1]

@@ -361,8 +361,8 @@
                 {% for header, image1, image2, iscn, gene_report, debug_info, bed_rows in content %}
                     {% set cluster_id = loop.index %}
                     <div class="cluster-image-container" id="cluster-image-{{ cluster_id }}">
-                        <img id="image1-{{ cluster_id }}" src="data:image/png;base64,{{ image1 }}" alt="Image 1" class="img-fluid image1 background-shading img-magnifier-container" style="display:block; z-index:5">
-                        <img id="image2-{{ cluster_id }}" src="data:image/png;base64,{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading img-magnifier-container" style="display:block; z-index:5">
+                        <img id="image1-{{ cluster_id }}" src="clustered_karyotype_images/{{ image1 }}" alt="Image 1" class="img-fluid image1 background-shading img-magnifier-container" style="display:block; z-index:5">
+                        <img id="image2-{{ cluster_id }}" src="clustered_karyotype_images/{{ image2 }}" alt="Image 2" class="img-fluid image2 background-shading img-magnifier-container" style="display:block; z-index:5">
                     </div>
                     <img src="data:image/png;base64,{{ mag_icon }}" id="magnifying-glass-icon-img" class="magnifying-glass-icon">
                 {% endfor %}
