@@ -4,6 +4,10 @@ import matplotlib.colors as mcolors
 import colorsys
 from PIL import Image
 import math
+# from PyPDF2 import PdfReader, PdfWriter
+# from pdf2image import convert_from_path
+import fitz
+import glob
 from matplotlib.backends.backend_pdf import PdfPages
 
 from .KarUtils import *
@@ -300,12 +304,31 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_s
 
 
 def rotate_image(input_image_path, output_image_path):
-    # Open an image file
-    with Image.open(input_image_path) as img:
-        # Rotate the image by 90 degrees
-        rotated_img = img.rotate(270, expand=True)
-        # Save the rotated image
-        rotated_img.save(output_image_path)
+    # identify image type
+    suffix = input_image_path.split('.')[-1]
+    if suffix == 'png':
+        with Image.open(input_image_path) as img:
+            rotated_img = img.rotate(270, expand=True)
+            rotated_img.save(output_image_path)
+    elif suffix == 'pdf':
+        ### generate pdf
+        ## fitz version
+        doc = fitz.open(input_image_path)
+        doc[0].set_rotation(90)
+        doc.save(output_image_path)
+        doc.close()
+        ## PdfReader version
+        # reader = PdfReader(input_image_path)
+        # writer = PdfWriter()
+        # page = reader.pages[0]
+        # page.rotate(90)
+        # writer.add_page(page)
+        # with open(output_image_path, "wb") as output_pdf:
+        #     writer.write(output_pdf)
+        # pdf_img = convert_from_path(output_image_path, dpi=500)
+        # pdf_img[0].save(output_image_path.replace('pdf', 'png'), 'PNG')
+    else:
+        raise TypeError(f'image type not supported: {input_image_path}')
 
 
 def generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
@@ -835,15 +858,27 @@ def make_image(vis_input, i_max_length, output_prefix, param_image_len_scale, ou
                         CHR_HEADER_Y_OFFSET=1.8,
                         CHR_HEADER_HIGHLIGHT_Y_OFFSET=1.15)
 
-    plt.savefig(output_prefix + '.png', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)  # change to SVG for manualscript-prep
-    if output_svg:
-        plt.savefig(output_prefix + '.svg', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
-    if output_pdf:
-        # plt.savefig(output_prefix + '.pdf', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
-        with PdfPages(output_prefix + '.pdf') as pdf:
-            pdf.savefig(fig)
+    plt.savefig(output_prefix + '.pdf', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)  # change to SVG for manualscript-prep
+    # if output_svg:
+    #     plt.savefig(output_prefix + '.svg', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
+    # if output_pdf:
+    #     # plt.savefig(output_prefix + '.pdf', bbox_inches='tight', dpi=IMAGE_DPI, transparent=True)
+    #     with PdfPages(output_prefix + '.pdf') as pdf:
+    #         pdf.savefig(fig)
     plt.close()
-    rotate_image(output_prefix + '.png', output_prefix + '_rotated.png')
+    rotate_image(output_prefix + '.pdf', output_prefix + '_rotated.pdf')
+    ## convert pdf to png
+    zoom = 500 / 72  # PyMuPDF works with a base of 72 DPI, so we scale it
+    doc = fitz.open(output_prefix + '_rotated.pdf')
+    page = doc.load_page(0)
+    matrix = fitz.Matrix(zoom, zoom)
+    pix = page.get_pixmap(matrix=matrix, alpha=True)
+    pix.save(output_prefix + '_rotated.png')
+    doc.close()
+    ## remove intermediate PDF files
+    output_dir = '/'.join(output_prefix.split('/')[:-1])
+    for pdf_file in glob.glob(f'{output_dir}/*.pdf'):
+        os.remove(pdf_file)
 
 def make_summary_image(file_header, vis_input, output_prefix):
     plt.rcParams['figure.dpi'] = 500
@@ -890,17 +925,33 @@ def make_summary_image(file_header, vis_input, output_prefix):
                             CHR_HEADER_FONTSIZE=CHR_HEADER_FONTSIZE,
                             CHR_HEADER_Y_OFFSET=CHR_HEADER_Y_OFFSET,
                             CHR_HEADER_HIGHLIGHT_Y_OFFSET=CHR_HEADER_HIGHLIGHT_Y_OFFSET)
-        plt.savefig(f"{output_prefix}_split{current_fig_idx}.png", bbox_inches='tight', dpi=300, transparent=True)
+        plt.savefig(f"{output_prefix}_split{current_fig_idx}.pdf", bbox_inches='tight', dpi=300, transparent=True)
         plt.close()
-        rotate_image(f"{output_prefix}_split{current_fig_idx}.png", f"{output_prefix}_split{current_fig_idx}_rotated.png")
+        rotate_image(f"{output_prefix}_split{current_fig_idx}.pdf", f"{output_prefix}_split{current_fig_idx}_rotated.pdf")
+
+        ## convert PDF to PNG
+        zoom = 300 / 72  # PyMuPDF works with a base of 72 DPI, so we scale it
+        doc = fitz.open(f"{output_prefix}_split{current_fig_idx}_rotated.pdf")
+        page = doc.load_page(0)
+        matrix = fitz.Matrix(zoom, zoom)
+        pix = page.get_pixmap(matrix=matrix)
+        pix.save(f"{output_prefix}_split{current_fig_idx}_rotated.png")
+        doc.close()
+
         current_chr_idx += len(current_vis_input)
         current_fig_idx += 1
 
-    # merge images
+    ## merge images
     image_paths = [f"{output_prefix}_split{i}_rotated.png" for i in range(current_fig_idx)]  # already in the right order
     output_path = f"{output_prefix}_merged_rotated.png"
     preview_output_path = f"{output_prefix}_merged_rotated_preview.png"
     concatenate_images_vertically(image_paths, output_path, preview_output_path)
+
+    ## remove intermediate files
+    output_dir = '/'.join(output_prefix.split('/')[:-1])
+    for inter_file in glob.glob(f'{output_dir}/*split*'):
+        os.remove(inter_file)
+
 
 def concatenate_images_vertically(image_paths, output_path, preview_output_path):
     # Open all images
