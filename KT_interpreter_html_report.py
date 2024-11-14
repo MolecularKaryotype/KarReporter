@@ -140,7 +140,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
                  for filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image in
                  zip(filenames, clusters, case_event_type_reports, case_complexities, DDG2P_interruptions, DDG2P_CNV, summary_image_names, summary_preview_image_names)]
     env1 = Environment(loader=FileSystemLoader(f'{kr_dir}/bootstrap'))
-    newtemplate = env1.get_template('dashboard.html')
+    newtemplate = env1.get_template('report_summary.html')
     newrendered_html = newtemplate.render(title=title, content=dashboard, debug=debug)
 
     #create output folder if it does not exist
@@ -152,7 +152,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     shutil.copytree(f"{kr_dir}/bootstrap/static", output_dir+"/static", dirs_exist_ok=True)
     ###
 
-    with open(output_dir+"/"+"dashboard.html", 'w') as f:
+    with open(output_dir+"/"+"report_summary.html", 'w') as f:
         f.write(newrendered_html)
 
     # with open(output_dir+"/oldreport.html", 'w') as f:
