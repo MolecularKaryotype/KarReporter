@@ -46,7 +46,7 @@ ORIENTATION_BAR_WEIGHT = 0.5
 WHOLE_CHR_Y_OFFSET = 2
 CHR_HEADER_Y_OFFSET = -0.2 + WHOLE_CHR_Y_OFFSET
 CHR_BAND_Y_OFFSET = WHOLE_CHR_Y_OFFSET
-CHR_BAND_MARK_Y_OFFSET = 0.05 + CHR_BAND_Y_OFFSET
+CHR_BAND_MARK_Y_OFFSET =  CHR_BAND_Y_OFFSET
 CHR_HEADER_HIGHLIGHT_Y_OFFSET = -0.85 + WHOLE_CHR_Y_OFFSET
 ORIGIN_Y_OFFSET = 1.3 + WHOLE_CHR_Y_OFFSET
 TICK_Y_OFFSET = -0.05 + WHOLE_CHR_Y_OFFSET
@@ -66,8 +66,8 @@ BAND_SATURATION = 1
 BAND_ALPHA = 1
 BAND_TEXT_WEIGHT = 'normal'
 ORIGIN_ALPHA = 0.7
-# MIN_LEN_BAND_LABEL = 1
-MIN_LEN_BAND_LABEL = 0
+MIN_LEN_BAND_LABEL = 0.6
+# MIN_LEN_BAND_LABEL = 0
 MIN_LEN_BAND_LABEL_TO_BLEND = 1.75
 
 TICK_MARKING_X_OFFSET = 0.25  # helps to center the tickmarkings
@@ -147,7 +147,7 @@ chr_color_mapping = {
 reduced_saturation_mapping = {k: reduce_saturation(v, BAND_SATURATION) for k, v in color_mapping.items()}
 
 
-def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_show_event_number=True, max_label_each_line=MAX_LABEL_EACH_LINE, **kwargs):
+def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_show_event_number=True, hide_cen_border=False, max_label_each_line=MAX_LABEL_EACH_LINE, **kwargs):
     ## overwrite variables
     global CHR_HEADER_HIGHLIGHT_FONTSIZE, CHR_HEADER_FONTSIZE, CHR_HEADER_Y_OFFSET, CHR_HEADER_HIGHLIGHT_Y_OFFSET
     if 'CHR_HEADER_HIGHLIGHT_FONTSIZE' in kwargs:
@@ -173,8 +173,8 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_s
         text_color = get_text_color(color)
         chrom_bands = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET, y_offset + CHR_BAND_Y_OFFSET), end - start, BAND_WIDTH,
                                         linewidth=1, edgecolor='black', facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
-        if stain == 'acen':
-            # add bands to cover up the top and bottom band borders
+        if hide_cen_border and stain == 'acen':
+            ## add bands to cover up the top and bottom band borders for CEN
             cover_band1 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.034), 0.05, BAND_WIDTH - 0.068,
                                            linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
             cover_band2 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET + end - start - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.034), 0.05, BAND_WIDTH - 0.068,
@@ -191,17 +191,19 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_s
         if end - start <= (MIN_LEN_BAND_LABEL_TO_BLEND / len_scaling):
             ## create blending to cover the rectangle edges
             previous_band_color = reduced_saturation_mapping[chromosome_data['bands'][band_idx - 1]['stain']] if band_idx > 0 else color
-            next_band_color = reduced_saturation_mapping[chromosome_data['bands'][band_idx + 1]['stain']] if band_idx <= len(
-                chromosome_data['bands']) - 2 else color
-            cover_band1 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.12), 0.05, BAND_WIDTH - 0.24,
-                                            linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
-            cover_band2 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET + end - start - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.12), 0.05,
-                                            BAND_WIDTH - 0.24,
-                                            linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
-            cover_band1.set_zorder(2)
-            cover_band2.set_zorder(2)
-            ax.add_patch(cover_band1)
-            ax.add_patch(cover_band2)
+            next_band_color = reduced_saturation_mapping[chromosome_data['bands'][band_idx + 1]['stain']] if band_idx <= len(chromosome_data['bands']) - 2 else color
+            # do not blend for first or last border line
+            if band_idx != 0:
+                cover_band1 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.12), 0.05, BAND_WIDTH - 0.24,
+                                                linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
+                cover_band1.set_zorder(2)
+                ax.add_patch(cover_band1)
+            if band_idx != len(chromosome_data['bands']) - 1:
+                cover_band2 = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET + end - start - 0.034, y_offset + CHR_BAND_Y_OFFSET + 0.12), 0.05,
+                                                BAND_WIDTH - 0.24,
+                                                linewidth=1, edgecolor=color, facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
+                cover_band2.set_zorder(2)
+                ax.add_patch(cover_band2)
 
     ## Orientations Contig
     for contig in chromosome_data['orientation_contigs']:
@@ -648,141 +650,6 @@ def max_chr_length(vis_input):
         if c_length > max_length:
             max_length = c_length
     return math.ceil(max_length)
-
-
-#########################TESTS#########################
-
-def test_artificial_chr_image():
-    # Example data for multiple chromosomes
-    chromosomes_data = [
-        {
-            'name': 'Chr1',
-            'length': 125,
-            'bands': [
-                {'start': 0, 'end': 15, 'name': 'p15', 'stain': 'gneg'},
-                {'start': 15, 'end': 25, 'name': 'p14', 'stain': 'gpos25'},
-                {'start': 25, 'end': 35, 'name': 'p13', 'stain': 'gpos50'},
-                {'start': 35, 'end': 45, 'name': 'p12', 'stain': 'gpos75'},
-                {'start': 45, 'end': 55, 'name': 'p11.2', 'stain': 'acen'},
-                {'start': 55, 'end': 65, 'name': 'q11.2', 'stain': 'acen'},
-                {'start': 65, 'end': 75, 'name': 'q21', 'stain': 'gpos100'},
-                {'start': 75, 'end': 85, 'name': 'q22', 'stain': 'gneg'},
-                {'start': 85, 'end': 95, 'name': 'q23', 'stain': 'gvar'},
-                {'start': 95, 'end': 105, 'name': 'q24', 'stain': 'gneg'},
-                {'start': 105, 'end': 115, 'name': 'q25', 'stain': 'stalk'},
-                {'start': 115, 'end': 125, 'name': 'q26', 'stain': 'gneg'}
-            ],
-            'origins': [
-                {'start': 0, 'end': 95, 'name': '1'},
-                {'start': 95, 'end': 125, 'name': '2'}
-            ],
-            'highlight': False,
-            'sv_labels': [
-                {'pos': 24, 'label': '[2]INS'}
-            ]
-        },
-        {
-            'name': 'Chr2',
-            'length': 120,
-            'bands': [
-                {'start': 0, 'end': 10, 'name': 'p15', 'stain': 'gneg'},
-                {'start': 10, 'end': 20, 'name': 'p14', 'stain': 'gpos25'},
-                {'start': 20, 'end': 30, 'name': 'p13', 'stain': 'gpos50'},
-                {'start': 30, 'end': 40, 'name': 'p12', 'stain': 'gpos75'},
-                {'start': 40, 'end': 50, 'name': 'p11.2', 'stain': 'acen'},
-                {'start': 50, 'end': 60, 'name': 'q11.2', 'stain': 'acen'},
-                {'start': 60, 'end': 70, 'name': 'q21', 'stain': 'gpos100'},
-                {'start': 70, 'end': 80, 'name': 'q22', 'stain': 'gneg'},
-                {'start': 80, 'end': 90, 'name': 'q23', 'stain': 'gvar'},
-                {'start': 90, 'end': 100, 'name': 'q24', 'stain': 'gneg'},
-                {'start': 100, 'end': 110, 'name': 'q25', 'stain': 'stalk'},
-                {'start': 110, 'end': 120, 'name': 'q26', 'stain': 'gneg'}
-            ],
-            'origins': [
-                {'start': 0, 'end': 60, 'name': '3'},
-                {'start': 60, 'end': 100, 'name': '5'},
-                {'start': 100, 'end': 120, 'name': '1'}
-            ],
-            'highlight': True,
-            'sv_labels': [
-                {'pos': 58, 'label': '[2]DEL'},
-                {'pos': 79, 'label': '[2]DUPINV'}
-            ]
-        },
-        {
-            'name': 'Chr2',
-            'length': 120,
-            'bands': [
-                {'start': 0, 'end': 10, 'name': 'p15', 'stain': 'gneg'},
-                {'start': 10, 'end': 20, 'name': 'p14', 'stain': 'gpos25'},
-                {'start': 20, 'end': 30, 'name': 'p13', 'stain': 'gpos50'},
-                {'start': 30, 'end': 40, 'name': 'p12', 'stain': 'gpos75'},
-                {'start': 40, 'end': 50, 'name': 'p11.2', 'stain': 'acen'},
-                {'start': 50, 'end': 60, 'name': 'q11.2', 'stain': 'acen'},
-                {'start': 60, 'end': 70, 'name': 'q21', 'stain': 'gpos100'},
-                {'start': 70, 'end': 80, 'name': 'q22', 'stain': 'gneg'},
-                {'start': 80, 'end': 90, 'name': 'q23', 'stain': 'gvar'},
-                {'start': 90, 'end': 100, 'name': 'q24', 'stain': 'gneg'},
-                {'start': 100, 'end': 110, 'name': 'q25', 'stain': 'stalk'},
-                {'start': 110, 'end': 120, 'name': 'q26', 'stain': 'gneg'}
-            ],
-            'origins': [
-                {'start': 0, 'end': 60, 'name': '3'},
-                {'start': 60, 'end': 100, 'name': '5'},
-                {'start': 100, 'end': 120, 'name': '1'}
-            ],
-            'highlight': True,
-            'sv_labels': [
-                {'pos': 58, 'label': '[2]DEL'},
-                {'pos': 79, 'label': '[2]T'}
-            ]
-        },
-        {
-            'name': 'Chr2',
-            'length': 120,
-            'bands': [
-                {'start': 0, 'end': 10, 'name': 'p15', 'stain': 'gneg'},
-                {'start': 10, 'end': 20, 'name': 'p14', 'stain': 'gpos25'},
-                {'start': 20, 'end': 30, 'name': 'p13', 'stain': 'gpos50'},
-                {'start': 30, 'end': 40, 'name': 'p12', 'stain': 'gpos75'},
-                {'start': 40, 'end': 50, 'name': 'p11.2', 'stain': 'acen'},
-                {'start': 50, 'end': 60, 'name': 'q11.2', 'stain': 'acen'},
-                {'start': 60, 'end': 70, 'name': 'q21', 'stain': 'gpos100'},
-                {'start': 70, 'end': 80, 'name': 'q22', 'stain': 'gneg'},
-                {'start': 80, 'end': 90, 'name': 'q23', 'stain': 'gvar'},
-                {'start': 90, 'end': 100, 'name': 'q24', 'stain': 'gneg'},
-                {'start': 100, 'end': 110, 'name': 'q25', 'stain': 'stalk'},
-                {'start': 110, 'end': 120, 'name': 'q26', 'stain': 'gneg'}
-            ],
-            'origins': [
-                {'start': 0, 'end': 60, 'name': '3'},
-                {'start': 60, 'end': 100, 'name': '5'},
-                {'start': 100, 'end': 120, 'name': '1'}
-            ],
-            'highlight': True,
-            'sv_labels': [
-                {'pos': 58, 'label': '[2]DEL'},
-                {'pos': 79, 'label': '[2]DUP'}
-            ]
-        }
-    ]
-
-    plt.rcParams['figure.dpi'] = 250
-    n_chrom = len(chromosomes_data)
-    n_row = n_chrom // 4 + 1
-    fig, i_ax = plt.subplots(figsize=(5 * n_row, 2 * min(4, n_chrom)))
-
-    for chrom_idx, i_chromosome_data in enumerate(chromosomes_data):
-        row = chrom_idx // 4
-        col = chrom_idx % 4
-        plot_chromosome(i_ax, i_chromosome_data, col * 3, row * 28, 1.0, only_show_event_number=False)
-
-    # plt.show(bbox_inches='tight')
-    plt.savefig('test_fig.png', bbox_inches='tight')
-    plt.close()
-    rotate_image('test_fig.png', 'test_fig_rotated.png')
-
-
 
 ##########################IO###########################
 
