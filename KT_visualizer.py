@@ -333,7 +333,7 @@ def rotate_image(input_image_path, output_image_path):
         raise TypeError(f'image type not supported: {input_image_path}')
 
 
-def generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_index_dict):
+def generate_cytoband_visualizer_input(events_full, events_partial, aligned_haplotypes, segment_to_index_dict):
     index_to_segment_dict = reverse_dict(segment_to_index_dict)
     cyto_path = create_cytoband_path()
     vis_input = []
@@ -346,7 +346,7 @@ def generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_in
                    'length': get_chr_length(segment_list),
                    'bands': label_cytoband(segment_list, cyto_path),
                    'orientation_contigs': get_orientation_contigs(segment_list),
-                   'highlight': chr_is_highlighted(events, hap.id),
+                   'highlight': chr_is_highlighted(events_full + events_partial, hap.id),
                    'sv_labels': []}
         vis_input.append(c_entry)
     assign_sv_labels(events, vis_input, index_to_segment_dict)
@@ -477,8 +477,8 @@ def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict):
                          'deletion': 'DEL',
                          'inversion': 'INV',
                          'tandem_duplication': 'DUP',
-                         'left_duplication_inversion': "DUPI",
-                         'right_duplication_inversion': 'DUPI',
+                         'left_duplication_inversion': "DPIV",
+                         'right_duplication_inversion': 'DPIV',
                          'balanced_translocation': 'T'}
 
     def find_and_assign_single_label(path_id, indexed_seg, label_str):

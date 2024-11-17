@@ -67,9 +67,8 @@ def hyperlink_iscn_interpretation(input_str):
     return input_str
 
 
-def generate_html_report(compile_image, cases_of_interest, title, data_dir, image_output_dir, output_dir, debug=False, skip=None):
+def generate_html_report(compile_image, cases_of_interest, title, data_dir, image_output_dir, output_dir, omkar_input_data_dir, debug=False, skip=None):
     """
-
     @param compile_image: bool, whether the images were already compiled/not needing update
     @param cases_of_interest: list, if None, report all cases; otherwise, report only cases in the list
     @param title: title of the report
@@ -79,153 +78,138 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     @param debug: bool, whether to include debug info in the report
     @param skip: list, cases to skip
     @return: N/a
+    @param omkar_input_data_dir:
     """
     os.makedirs(image_output_dir, exist_ok=True)
     os.makedirs(output_dir + "/full_karyotype_images/", exist_ok=True)
     kr_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # one tuple per cluster (event), where the output of batch_populate_html_contents is all the clusters (from all case files)
-    (filenames, clusters, headers, cases_with_events,
-     image1_paths, image2_paths,
-     iscn_reports, genes_reports,
-     case_event_type_reports, case_complexities, DDG2P_interruptions, DDG2P_CNV, summary_image_paths, summary_preview_image_paths,
-     bed_header, bed_rows,
-     debug_outputs) = batch_populate_html_contents(data_dir, image_output_dir, file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
+    # contains sample-level and cluster-level info
+    # each is a list, split either by sample or by cluster
+    # sample-level is for report summary, and cluster-level is for each subpage in the report
+    (filenames, n_clusters, cluster_headers, cases_with_events,
+        image1_paths, image2_paths,
+        iscn_reports_full, iscn_reports_partial, genes_reports_full, genes_reports_partial,
+        case_event_type_reports_full, case_event_type_reports_partial, case_complexities_full, case_complexities_partial,
+        DDG2P_interruptions_full, DDG2P_interruptions_partial, DDG2P_CNV_full, DDG2P_CNV_partial,
+        summary_image_paths, summary_preview_image_paths,
+        bed_header, bed_rows,
+        debug_outputs) = batch_populate_html_contents(data_dir, image_output_dir, omkar_input_data_dir, file_of_interest=cases_of_interest, compile_image=compile_image, debug=debug, skip=skip)
 
-    ## summarizing number of events
+    ## content for report summary
+    # format number of events, also log number of events for summary count
+    event_order = ['reciprocal_translocation',
+                   'nonreciprocal_translocation',
+                   'duplication_inversion',
+                   'inversion',
+                   'duplicated_insertion',
+                   'tandem_duplication',
+                   'deletion']
+    case_event_type_report_strs = []
     summary_event_counts = {}
-    for sample_str in case_event_type_reports:
-        parsed_str = copy.deepcopy(sample_str)
-        parsed_str = parsed_str.replace('<b>', '').replace('</b>', '').split(', ')
-        if not sample_str:
-            # case without interpreted event
-            continue
-        for info in parsed_str:
-            info = info.split(': ')
-            event_type = info[0]
-            event_count = int(info[1])
-            if event_type not in summary_event_counts:
-                summary_event_counts[event_type] = event_count
-            else:
-                summary_event_counts[event_type] += event_count
+    for (event_tally_full, event_tally_partial) in zip(case_event_type_reports_full, case_event_type_reports_partial):
+        c_str = []
+        for e in event_order:
+            full_count = 0 if not e in event_tally_full else event_tally_full[e]
+            partial_count = 0 if not e in event_tally_partial else event_tally_partial[e]
+            total_count = full_count + partial_count
+            if total_count != 0:
+                c_str.append(f"<b>{e.replace('_', ' ')}: {total_count}</b>&#8202;({partial_count})")
+                if e not in summary_event_counts:
+                    summary_event_counts[e] = total_count
+                else:
+                    summary_event_counts[e] += total_count
+        case_event_type_report_strs.append(', '.join(c_str))
     print({key: summary_event_counts[key] for key in sorted(summary_event_counts)})
 
-    image1_names = [img.split('/')[-1] for img in image1_paths]
-    image2_names = [img.split('/')[-1] for img in image2_paths]
+    # case complexities
+    case_complexity_strs = []
+    for (complexity_full, complexity_partial) in zip(case_complexities_full, case_complexities_partial):
+        c_str = f"{complexity_full + complexity_partial}&#8202;({complexity_partial})"
+        case_complexity_strs.append(c_str)
 
+    # DDG2P interruptions
+    DDG2P_interruption_strs = []
+    for (interruption_full, interruption_partial) in zip(DDG2P_interruptions_full, DDG2P_interruptions_partial):
+        c_str = f"{interruption_full + interruption_partial}&#8202;({interruption_partial})"
+        DDG2P_interruption_strs.append(c_str)
+
+    # DDG2P CNV
+    DDG2P_cnv_strs = []
+    for (cnv_full, cnv_partial) in zip(DDG2P_CNV_full, DDG2P_CNV_partial):
+        c_str = f"{cnv_full + cnv_partial}&#8202;({cnv_partial})"
+        DDG2P_cnv_strs.append(c_str)
+
+    # summary images
     summary_image_names = [img.split('/')[-1] for img in summary_image_paths]
     summary_preview_image_names = [img.split('/')[-1] for img in summary_preview_image_paths]
     with open(f"{kr_dir}/bootstrap/static/assets/pics/magnifying_glass_icon_reflected.txt") as fp_read:
         magnifying_glass_icon = fp_read.readline().strip()
 
-    formatted_genes_reports = [format_genes_report(genes_report) for genes_report in genes_reports]
-    columns_order = ['SV', 'gene name', 'gene omim', 'rationale']
-
-    ## hyperlinking
-    for iscn_report in iscn_reports:
-        for iscn_report_idx, (iscn, sv_interpretation) in enumerate(iscn_report):
-            hyperlinked_sv_interpretation = hyperlink_iscn_interpretation(sv_interpretation)
-            iscn_report[iscn_report_idx][1] = hyperlinked_sv_interpretation
-
-    ## for old report
-    # content = [(header, text, image, table_content, debug_info) for header, text, image, table_content, debug_info in
-    #            zip(headers, iscn_reports, images1_base64, formatted_genes_reports, debug_outputs)]
-    # env = Environment(loader=FileSystemLoader('./'))
-    # template = env.get_template('template.html')
-    # rendered_html = template.render(title=title, content=content, columns_order=columns_order, debug=debug)
-    dashboard = [(filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image)
-                 for filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image in
-                 zip(filenames, clusters, case_event_type_reports, case_complexities, DDG2P_interruptions, DDG2P_CNV, summary_image_names, summary_preview_image_names)]
+    summary_report = [(filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image)
+                      for filename, cluster, case_event_type_report, case_complexity, DDG2P_interruptions, DDG2P_CNV, summary_image, summary_preview_image in
+                      zip(filenames, n_clusters, case_event_type_report_strs, case_complexity_strs, DDG2P_interruption_strs, DDG2P_cnv_strs, summary_image_names, summary_preview_image_names)]
     env1 = Environment(loader=FileSystemLoader(f'{kr_dir}/bootstrap'))
     newtemplate = env1.get_template('report_summary.html')
-    newrendered_html = newtemplate.render(title=title, content=dashboard, debug=debug)
+    newrendered_html = newtemplate.render(title=title, content=summary_report, debug=debug)
 
-    #create output folder if it does not exist
+    ## copying html formatting assets
     if not os.path.exists(output_dir):
         os.makedirs(output_dir,exist_ok=True)
-        #Copy the static folder into output folder and overwrite
     if os.path.exists(output_dir+"/static"):
         shutil.rmtree(output_dir+"/static")
     shutil.copytree(f"{kr_dir}/bootstrap/static", output_dir+"/static", dirs_exist_ok=True)
-    ###
 
     with open(output_dir+"/"+"report_summary.html", 'w') as f:
         f.write(newrendered_html)
 
-    # with open(output_dir+"/oldreport.html", 'w') as f:
-    #     f.write(rendered_html)
+    ## content for each cluster subpage
+    # hyperlinking
+    for ir in iscn_reports_full:
+        for iscn_report_idx, (iscn, sv_interpretation) in enumerate(ir):
+            hyperlinked_sv_interpretation = hyperlink_iscn_interpretation(sv_interpretation)
+            ir[iscn_report_idx][1] = hyperlinked_sv_interpretation
+    for ir in iscn_reports_partial:
+        for iscn_report_idx, (iscn, sv_interpretation) in enumerate(ir):
+            hyperlinked_sv_interpretation = hyperlink_iscn_interpretation(sv_interpretation)
+            ir[iscn_report_idx][1] = hyperlinked_sv_interpretation
+
+    # cluster images
+    image1_names = [img.split('/')[-1] for img in image1_paths]
+    image2_names = [img.split('/')[-1] for img in image2_paths]
+
+    # genes report
+    formatted_genes_reports_full = [format_genes_report(genes_report) for genes_report in genes_reports_full]
+    formatted_genes_reports_partial = [format_genes_report(genes_report) for genes_report in genes_reports_partial]
+    columns_order = ['SV', 'gene name', 'gene omim', 'rationale']
 
     start = 0
     index = 0
     reporttemplate = env1.get_template('report.html')
     # os.makedirs(output_dir+"/cases_html", exist_ok=True)
-    for cluster in clusters:
-        filtered_headers = headers[start:start+cluster]
-        filtered_images1 = image1_names[start:start+cluster]
-        filtered_images2 = image2_names[start:start+cluster]
-        filtered_iscn = iscn_reports[start:start+cluster]
-        filtered_gene_reports = formatted_genes_reports[start:start+cluster]
-        filtered_debug = debug_outputs[start:start+cluster]
-        filtered_bed_rows = bed_rows[start:start+cluster]
-        start = start+cluster
+    for n_cluster in n_clusters:
+        ## each sample page is generated with n_cluster subpages, where each input data is spliced for the n_cluster's info
+        filtered_headers = cluster_headers[start:start+n_cluster]
+        filtered_images1 = image1_names[start:start+n_cluster]
+        filtered_images2 = image2_names[start:start+n_cluster]
+        filtered_iscn_full = iscn_reports_full[start:start+n_cluster]
+        filtered_iscn_partial = iscn_reports_partial[start:start + n_cluster]
+        filtered_gene_reports_full = formatted_genes_reports_full[start:start+n_cluster]
+        filtered_gene_reports_partial = formatted_genes_reports_partial[start:start + n_cluster]
+        filtered_debug = debug_outputs[start:start+n_cluster]
+        filtered_bed_rows = bed_rows[start:start+n_cluster]
+        start = start+n_cluster
         report_title = filenames[index]
-        index+=1
+        index += 1
 
         # this is the content for each cluster
-        filtered_content = [(header, image1, image2, iscn, gene_report, debug_info, bed_row) for header, image1, image2, iscn, gene_report, debug_info, bed_row in
-               zip(filtered_headers, filtered_images1, filtered_images2, filtered_iscn, filtered_gene_reports, filtered_debug, filtered_bed_rows)]
+        filtered_content = [(header, image1, image2, iscn_full, iscn_partial, gene_report_full, gene_report_partial, debug_info, bed_row) for header, image1, image2, iscn_full, iscn_partial, gene_report_full, gene_report_partial, debug_info, bed_row in
+               zip(filtered_headers, filtered_images1, filtered_images2, filtered_iscn_full, filtered_iscn_partial, filtered_gene_reports_full, filtered_gene_reports_partial, filtered_debug, filtered_bed_rows)]
         filtered_report = reporttemplate.render(title=report_title, content=filtered_content, columns_order=columns_order, debug=debug, mag_icon=magnifying_glass_icon, bed_header=bed_header)
         with open(f"{output_dir}/{report_title}.html", 'w') as f:
             f.write(filtered_report)
 
     print(f"HTML file generated")
-
-
-def manual_test():
-    # Define the data
-    title = "My Text and Images"
-    texts = ['text1',
-             'text2',
-             'text3']
-
-    ## ZJ: image paths need to be relative path
-    images = ['/Users/zhaoyangjia/PyCharm_Repos/KarComparator/latex_reports/paul_dremsek_plots_new/3_imagecluster0_rotated.png',
-              '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/latex_reports/paul_dremsek_plots_new/3_imagecluster1_rotated.png',
-              '/Users/zhaoyangjia/PyCharm_Repos/KarComparator/latex_reports/paul_dremsek_plots_new/3_imagecluster2_rotated.png']
-    images_base64 = []
-    for img in images:
-        images_base64.append(image_to_base64(img))
-
-    table_contents = [
-        [["Row1-Col1", "Row1-Col2"], ["Row2-Col1", "Row2-Col2"], ["Row3-Col1", "Row3-Col2"], ["Row4-Col1", "Row4-Col2"],
-         ["Row5-Col1", "Row5-Col2"], ["Row6-Col1", "Row6-Col2"], ["Row7-Col1", "Row7-Col2"], ["Row8-Col1", "Row8-Col2"],
-         ["Row9-Col1", "Row9-Col2"], ["Row10-Col1", "Row10-Col2"], ["Row11-Col1", "Row11-Col2"], ["Row12-Col1", "Row12-Col2"]],
-
-        [["Row1-Col1", "Row1-Col2"], ["Row2-Col1", "Row2-Col2"], ["Row3-Col1", "Row3-Col2"], ["Row4-Col1", "Row4-Col2"],
-         ["Row5-Col1", "Row5-Col2"], ["Row6-Col1", "Row6-Col2"], ["Row7-Col1", "Row7-Col2"], ["Row8-Col1", "Row8-Col2"],
-         ["Row9-Col1", "Row9-Col2"], ["Row10-Col1", "Row10-Col2"], ["Row11-Col1", "Row11-Col2"], ["Row12-Col1", "Row12-Col2"]],
-
-        [["Row1-Col1", "Row1-Col2"], ["Row2-Col1", "Row2-Col2"], ["Row3-Col1", "Row3-Col2"], ["Row4-Col1", "Row4-Col2"],
-         ["Row5-Col1", "Row5-Col2"], ["Row6-Col1", "Row6-Col2"], ["Row7-Col1", "Row7-Col2"], ["Row8-Col1", "Row8-Col2"],
-         ["Row9-Col1", "Row9-Col2"], ["Row10-Col1", "Row10-Col2"], ["Row11-Col1", "Row11-Col2"], ["Row12-Col1", "Row12-Col2"]]
-    ]
-
-    content = [(text, image, table_content) for text, image, table_content in zip(texts, images_base64, table_contents)]
-
-    # Create an environment for Jinja2
-    env = Environment(loader=FileSystemLoader('html_reports/'))
-    template = env.get_template('template.html')
-
-    # Render the template with the data
-    rendered_html = template.render(title=title, content=content)
-
-    # Write the rendered HTML to a file
-    output_file = 'html_reports/generate_html_report.html'
-    with open(output_file, 'w') as f:
-        f.write(rendered_html)
-
-    print(f"HTML file generated: {os.path.abspath(output_file)}")
-
 
 if __name__ == "__main__":
     forbidden_region_file = "KarUtils/Metadata/acrocentric_telo_cen.bed"
