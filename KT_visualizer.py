@@ -299,10 +299,10 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_s
             label_bar_y_end_loc = y_offset + LABEL_BAR_END_Y_OFFSET1 - SUBTICK_LEN
         label_mark_y_loc = label_bar_y_end_loc + LABEL_MARK_Y_OFFSET
         ax.plot([label_bar_x_loc, label_bar_x_loc], [label_bar_y_start_loc, label_bar_y_end_loc],
-                color=LABEL_MARK_COLOR, linewidth=LABEL_BAR_THICKNESS, alpha=LABEL_BAR_ALPHA)
+                color=sv_label['color'], linewidth=LABEL_BAR_THICKNESS, alpha=LABEL_BAR_ALPHA)
         ax.text(label_bar_x_loc, label_mark_y_loc, label,
                 ha='center', va='top', fontsize=LABEL_MARK_FONTSIZE, rotation=90,
-                alpha=LABEL_MARK_ALPHA, color=LABEL_MARK_COLOR, weight='normal')
+                alpha=LABEL_MARK_ALPHA, color=sv_label['color'], weight='normal')
 
 
 def rotate_image(input_image_path, output_image_path):
@@ -349,12 +349,13 @@ def generate_cytoband_visualizer_input(events_full, events_partial, aligned_hapl
                    'highlight': chr_is_highlighted(events_full + events_partial, hap.id),
                    'sv_labels': []}
         vis_input.append(c_entry)
-    assign_sv_labels(events, vis_input, index_to_segment_dict)
+    offshift_from_full = assign_sv_labels(events_full, vis_input, index_to_segment_dict, 'red', 0)
+    assign_sv_labels(events_partial, vis_input, index_to_segment_dict, 'blue', offshift_from_full)
 
     return vis_input
 
 
-def generate_segment_visualizer_input(events, aligned_haplotypes, segment_to_index_dict,
+def generate_segment_visualizer_input(events_full, events_partial, aligned_haplotypes, segment_to_index_dict,
                                       label_centromere=False,
                                       forbidden_region_file=get_metadata_file_path('acrocentric_telo_cen.bed')):
     ## make fixed color mapping for each segment
@@ -414,10 +415,11 @@ def generate_segment_visualizer_input(events, aligned_haplotypes, segment_to_ind
                    'length': get_chr_length(segment_list),
                    'bands': label_segment_for_segmentview(segment_list, hap.mt_hap),
                    'orientation_contigs': get_orientation_contigs(segment_list),
-                   'highlight': chr_is_highlighted(events, hap.id),
+                   'highlight': chr_is_highlighted(events_full + events_partial, hap.id),
                    'sv_labels': []}
         vis_input.append(c_entry)
-    assign_sv_labels(events, vis_input, index_to_segment_dict)
+    offshift_from_full = assign_sv_labels(events_full, vis_input, index_to_segment_dict, 'red', 0)
+    assign_sv_labels(events_partial, vis_input, index_to_segment_dict, 'blue', offshift_from_full)
 
     return vis_input
 
@@ -465,13 +467,15 @@ def chr_is_highlighted(input_events, hap_id):
     return False
 
 
-def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict):
+def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict, sv_label_color, offshift):
     """
     append sv-label info to all_vis_input entries
     :param input_events:
     :param all_vis_input:
     :param i_index_to_segment_dict:
-    :return:
+    :param sv_label_color:
+    :param offshift: to shift the event_id during display (vis_input)
+    :return: how many event ids assigned, used for the next assignment's offshift
     """
     name_abbreviation = {'insertion': 'INS',
                          'deletion': 'DEL',
@@ -495,7 +499,7 @@ def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict):
                     for seg in range(0, idx_in_segment_list + 1):
                         c_indexed_seg = entry['segment_list'][seg]
                         pos += len(i_index_to_segment_dict[int(c_indexed_seg[:-1])])
-                entry['sv_labels'].append({'pos': pos / 1e6, 'label': label_str})
+                entry['sv_labels'].append({'pos': pos / 1e6, 'label': label_str, 'color': sv_label_color})
                 path_found = True
                 break
         if not path_found:
@@ -511,15 +515,15 @@ def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict):
             left_segment = event_info[2][0].split('.')[3]
             event_name = name_abbreviation[event_type]
             c_path_idx = int(event_info[2][0].split('.')[0])
-            find_and_assign_single_label(c_path_idx, left_segment, '[{}]{}'.format(event_id, event_name))
+            find_and_assign_single_label(c_path_idx, left_segment, '[{}]{}'.format(event_id + offshift, event_name))
         elif event_type.startswith('balanced_translocation_unassociated'):
             left_segment1 = event_info[2][0].split('.')[3]
             left_segment2 = event_info[2][1].split('.')[3]
             event_name = name_abbreviation['balanced_translocation']
             c_path_idx1 = int(event_info[2][0].split('.')[0])
             c_path_idx2 = int(event_info[2][1].split('.')[0])
-            find_and_assign_single_label(c_path_idx1, left_segment1, '[{}]{}'.format(event_id, event_name))
-            find_and_assign_single_label(c_path_idx2, left_segment2, '[{}]{}'.format(event_id, event_name))
+            find_and_assign_single_label(c_path_idx1, left_segment1, '[{}]{}'.format(event_id + offshift, event_name))
+            find_and_assign_single_label(c_path_idx2, left_segment2, '[{}]{}'.format(event_id + offshift, event_name))
         elif event_type.startswith('balanced_translocation_associated'):
             if event_idx in associated_event:
                 continue
@@ -542,9 +546,10 @@ def assign_sv_labels(input_events, all_vis_input, i_index_to_segment_dict):
                 c_path_idx2 = int(next_event_info[2][1].split('.')[0])
             else:
                 raise RuntimeError('mt string not found')
-            find_and_assign_single_label(c_path_idx1, left_segment1, '[{}]{}'.format(event_id, event_name))
-            find_and_assign_single_label(c_path_idx2, left_segment2, '[{}]{}'.format(event_id, event_name))
+            find_and_assign_single_label(c_path_idx1, left_segment1, '[{}]{}'.format(event_id + offshift, event_name))
+            find_and_assign_single_label(c_path_idx2, left_segment2, '[{}]{}'.format(event_id + offshift, event_name))
         event_id += 1
+    return event_id - 1
 
 
 def indexed_segments_to_typed_segments(indexed_segment_list, index_to_segment_dict):
@@ -848,10 +853,13 @@ def concatenate_images_vertically(image_paths, output_path, preview_output_path)
     downscaled_image.save(preview_output_path)
 
 def merge_sv_labels(vis_entry, min_distance):
+    ### merges SV labels that are too close
     if len(vis_entry['sv_labels']) == 0:
         return
+    # heuristic: the first label's pos is always anchored (selected)
     new_sv_labels = [{'pos': vis_entry['sv_labels'][0]['pos'],
-                      'label': [vis_entry['sv_labels'][0]['label']]}]
+                      'label': [vis_entry['sv_labels'][0]['label']],
+                      'color': vis_entry['sv_labels'][0]['color']}]
     used_pos = [vis_entry['sv_labels'][0]['pos']]
 
     def closest_distance(i_pos):
@@ -876,9 +884,14 @@ def merge_sv_labels(vis_entry, min_distance):
         closest_conflict, conflict_pos_idx = closest_distance(c_pos)
         if closest_conflict <= min_distance:
             new_sv_labels[conflict_pos_idx]['label'].append(sv_label['label'])
+            # heuristic: use 'red' when any label is red; plt does not support multicolor plotting for text
+            if new_sv_labels[conflict_pos_idx]['color'] != 'red' and sv_label['color'] == 'red':
+                new_sv_labels[conflict_pos_idx]['color'] = 'red'
         else:
             new_sv_labels.append({'pos': sv_label['pos'],
-                                  'label': [sv_label['label']]})
+                                  'label': [sv_label['label']],
+                                  'color': sv_label['color']})
+            used_pos.append(sv_label['pos'])
     vis_entry['sv_labels'] = new_sv_labels
 
 

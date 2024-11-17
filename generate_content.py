@@ -426,7 +426,18 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
         else:
             cases_with_events.append(filename)
 
+        ## locate smap and cnv calls
+        smap_filepath1 = f"{omkar_input_data_dir}/{filename}/exp_refineFinal1_merged_filter_inversions.smap"
+        smap_filepath2 = f"{omkar_input_data_dir}/{filename}/contigs/exp_refineFinal1_sv/merged_smaps/exp_refineFinal1_merged_filter_inversions.smap"
+        cnv_filepath1 = f"{omkar_input_data_dir}/{filename}/cnv_calls_exp.txt"
+        cnv_filepath2 = f"{omkar_input_data_dir}/{filename}/contigs/alignmolvref/copynumber/cnv_calls_exp.txt"
+        smap_filepath = smap_filepath1 if os.path.isfile(smap_filepath1) else smap_filepath2
+        cnv_filepath = cnv_filepath1 if os.path.isfile(cnv_filepath1) else cnv_filepath2
+
         # summary view image
+        events = sort_events(events)
+        # this is a stable separation, keeping the sorted order
+        c_events_full, c_events_partial = separate_full_vs_partial_called_events(events, smap_filepath, cnv_filepath, index_to_segment_dict)
         summary_image_prefix = "{}/../full_karyotype_images/{}_cytoband_summary".format(image_dir, filename)
         image_path = summary_image_prefix + "_merged_rotated.png"
         preview_image_path = summary_image_prefix + "_merged_rotated_preview.png"
@@ -435,7 +446,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
         summary_image_paths.append(relative_image_path)
         summary_preview_image_paths.append(relative_preview_image_path)
         if compile_image:
-            summary_vis_input = generate_cytoband_visualizer_input(events, aligned_haplotypes, segment_to_index_dict)
+            summary_vis_input = generate_cytoband_visualizer_input(c_events_full, c_events_partial, aligned_haplotypes, segment_to_index_dict)
             summary_vis_input = sorted(summary_vis_input, key=vis_key)
             make_summary_image(filename, summary_vis_input, summary_image_prefix)
 
@@ -471,14 +482,6 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
             filtered_bed_df = bed_df[bed_df['chromosome'].isin(chr_numbers)]
             bed_rows.append(filtered_bed_df.values.tolist())
 
-            ## locate smap and cnv calls
-            smap_filepath1 = f"{omkar_input_data_dir}/{filename}/exp_refineFinal1_merged_filter_inversions.smap"
-            smap_filepath2 = f"{omkar_input_data_dir}/{filename}/contigs/exp_refineFinal1_sv/merged_smaps/exp_refineFinal1_merged_filter_inversions.smap"
-            cnv_filepath1 = f"{omkar_input_data_dir}/{filename}/cnv_calls_exp.txt"
-            cnv_filepath2 = f"{omkar_input_data_dir}/{filename}/contigs/alignmolvref/copynumber/cnv_calls_exp.txt"
-            smap_filepath = smap_filepath1 if os.path.isfile(smap_filepath1) else smap_filepath2
-            cnv_filepath = cnv_filepath1 if os.path.isfile(cnv_filepath1) else cnv_filepath2
-
             ## generate report text
             c_events = sort_events(c_events)
             # this is a stable separation, keeping the sorted order
@@ -498,7 +501,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
                     make_image(c_vis_input, max_chr_length(c_vis_input), image_prefix, IMG_LENGTH_SCALE_HORIZONTAL_SPLIT)
             image1_paths.append(relative_image_path)
 
-            c_vis_input = generate_segment_visualizer_input(c_events, c_aligned_haplotypes, segment_to_index_dict, label_centromere=True)
+            c_vis_input = generate_segment_visualizer_input(c_events_full, c_events_partial, c_aligned_haplotypes, segment_to_index_dict, label_centromere=True)
             c_vis_input = sorted(c_vis_input, key=vis_key)
             image_prefix = "{}/{}_segmentview_imagecluster{}".format(image_dir, filename, image_cluster_idx)
             image_path = image_prefix + '_rotated.png'
@@ -609,8 +612,54 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             if not smap_status:
                 partial_event.append(e)
                 continue
-        else:
-            print()
+        elif e[1] == 'insertion':
+            seg1 = e[2][0].split('.')[3]
+            seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
+            seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
+            seg4 = e[2][0].split('.')[4]
+            bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
+            bp2 = index_to_segment_dict[int(seg2[:-1])].start if seg2[-1] == '+' else index_to_segment_dict[int(seg2[:-1])].end
+            bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
+            bp4 = index_to_segment_dict[int(seg4[:-1])].start if seg4[-1] == '+' else index_to_segment_dict[int(seg4[:-1])].end
+            chrom1 = convert_chrom(index_to_segment_dict[int(seg1[:-1])].chr_name.replace('Chr', ''))
+            chrom2 = convert_chrom(index_to_segment_dict[int(seg2[:-1])].chr_name.replace('Chr', ''))
+            chrom3 = convert_chrom(index_to_segment_dict[int(seg3[:-1])].chr_name.replace('Chr', ''))
+            chrom4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
+            smap_status12 = edge_in_smap(smap_df, chrom1, chrom2, bp1, bp2, [], 0.0, 50000)
+            smap_status34 = edge_in_smap(smap_df, chrom3, chrom4, bp3, bp4, [], 0.0, 50000)
+            if (not smap_status12) or (not smap_status34):
+                partial_event.append(e)
+                continue
+        elif e[1] == 'left_duplication_inversion':
+            seg1 = e[2][0].split('.')[3]
+            seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
+            seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
+            seg4 = e[2][0].split('.')[4]
+            bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
+            bp2 = index_to_segment_dict[int(seg2[:-1])].start if seg2[-1] == '+' else index_to_segment_dict[int(seg2[:-1])].end
+            bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
+            bp4 = bp3  # self-edge
+            chrom = convert_chrom(index_to_segment_dict[int(seg1[:-1])].chr_name.replace('Chr', ''))  # should be strcitly intra-chr
+            smap_status12 = edge_in_smap(smap_df, chrom, chrom, bp1, bp2, [], 0.0, 50000)
+            smap_status34 = edge_in_smap(smap_df, chrom, chrom, bp3, bp4, [], 0.0, 50000)
+            if (not smap_status12) or (not smap_status34):
+                partial_event.append(e)
+                continue
+        elif e[1] == 'right_duplication_inversion':
+            seg1 = e[2][0].split('.')[3]
+            seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
+            seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
+            seg4 = e[2][0].split('.')[4]
+            bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
+            bp2 = bp1  # self-edge
+            bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
+            bp4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
+            chrom = convert_chrom(index_to_segment_dict[int(seg1[:-1])].chr_name.replace('Chr', ''))  # should be strictly intra-chr
+            smap_status12 = edge_in_smap(smap_df, chrom, chrom, bp1, bp2, [], 0.0, 50000)
+            smap_status34 = edge_in_smap(smap_df, chrom, chrom, bp3, bp4, [], 0.0, 50000)
+            if (not smap_status12) or (not smap_status34):
+                partial_event.append(e)
+                continue
         full_event.append(e)
     return full_event, partial_event
 
@@ -642,13 +691,12 @@ def parse_event_multiplicities(dict_list):
                           'duplicated_insertion': 2,
                           'tandem_duplication': 1,
                           'deletion': 1}
-    # rename_mapping = {'reciprocal_translocation': 'T-r',
-    #                   'nonreciprocal_translocation': 'T-nr',
-    #                   'duplication_inversion': 'DUP-inv',
-    #                   'inversion': 'INV',
-    #                   'duplicated_insertion': 'INS-dup',
-    #                   'tandem_duplication': 'DUP',
-    #                   'deletion': 'DEL'}
+
+    ## we are displaying insertion as duplicated insertion
+    combined_dict['duplicated_insertion'] = combined_dict['insertion']
+    combined_dict.pop('insertion')
+
+    ## tally complexity
     total_complexity = 0
     for event in event_order:
         if event in combined_dict and combined_dict[event] > 0:
