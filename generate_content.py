@@ -617,16 +617,26 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
             seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
             seg4 = e[2][0].split('.')[4]
-            bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
+            if seg1 == 'p-ter':
+                bp1 = -99
+                chrom1 = -1
+            else:
+                bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
+                chrom1 = convert_chrom(index_to_segment_dict[int(seg1[:-1])].chr_name.replace('Chr', ''))
             bp2 = index_to_segment_dict[int(seg2[:-1])].start if seg2[-1] == '+' else index_to_segment_dict[int(seg2[:-1])].end
             bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
-            bp4 = index_to_segment_dict[int(seg4[:-1])].start if seg4[-1] == '+' else index_to_segment_dict[int(seg4[:-1])].end
-            chrom1 = convert_chrom(index_to_segment_dict[int(seg1[:-1])].chr_name.replace('Chr', ''))
             chrom2 = convert_chrom(index_to_segment_dict[int(seg2[:-1])].chr_name.replace('Chr', ''))
             chrom3 = convert_chrom(index_to_segment_dict[int(seg3[:-1])].chr_name.replace('Chr', ''))
-            chrom4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
-            smap_status12 = edge_in_smap(smap_df, chrom1, chrom2, bp1, bp2, [], 0.0, 50000)
-            smap_status34 = edge_in_smap(smap_df, chrom3, chrom4, bp3, bp4, [], 0.0, 50000)
+            if seg4 == 'q-ter':
+                bp4 = -99
+                chrom4 = -1
+            else:
+                bp4 = index_to_segment_dict[int(seg4[:-1])].start if seg4[-1] == '+' else index_to_segment_dict[int(seg4[:-1])].end
+                chrom4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
+
+            # if terminal, we will require one fewer edge
+            smap_status12 = edge_in_smap(smap_df, chrom1, chrom2, bp1, bp2, [], 0.0, 50000) if bp1 != -99 else True
+            smap_status34 = edge_in_smap(smap_df, chrom3, chrom4, bp3, bp4, [], 0.0, 50000) if bp4 != -99 else True
             if (not smap_status12) or (not smap_status34):
                 partial_event.append(e)
                 continue
@@ -635,12 +645,15 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
             seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
             seg4 = e[2][0].split('.')[4]
-            bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
+            if seg1 == 'p-ter':
+                bp1 = -99
+            else:
+                bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
             bp2 = index_to_segment_dict[int(seg2[:-1])].start if seg2[-1] == '+' else index_to_segment_dict[int(seg2[:-1])].end
             bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
             bp4 = bp3  # self-edge
-            chrom = convert_chrom(index_to_segment_dict[int(seg1[:-1])].chr_name.replace('Chr', ''))  # should be strcitly intra-chr
-            smap_status12 = edge_in_smap(smap_df, chrom, chrom, bp1, bp2, [], 0.0, 50000)
+            chrom = convert_chrom(index_to_segment_dict[int(seg2[:-1])].chr_name.replace('Chr', ''))  # should be strcitly intra-chr
+            smap_status12 = edge_in_smap(smap_df, chrom, chrom, bp1, bp2, [], 0.0, 50000) if bp1 != -99 else True
             smap_status34 = edge_in_smap(smap_df, chrom, chrom, bp3, bp4, [], 0.0, 50000)
             if (not smap_status12) or (not smap_status34):
                 partial_event.append(e)
@@ -653,10 +666,13 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
             bp2 = bp1  # self-edge
             bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
-            bp4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
-            chrom = convert_chrom(index_to_segment_dict[int(seg1[:-1])].chr_name.replace('Chr', ''))  # should be strictly intra-chr
+            if seg4 == 'q-ter':
+                bp4 = -99
+            else:
+                bp4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
+            chrom = convert_chrom(index_to_segment_dict[int(seg2[:-1])].chr_name.replace('Chr', ''))  # should be strictly intra-chr
             smap_status12 = edge_in_smap(smap_df, chrom, chrom, bp1, bp2, [], 0.0, 50000)
-            smap_status34 = edge_in_smap(smap_df, chrom, chrom, bp3, bp4, [], 0.0, 50000)
+            smap_status34 = edge_in_smap(smap_df, chrom, chrom, bp3, bp4, [], 0.0, 50000) if bp4 != -99 else True
             if (not smap_status12) or (not smap_status34):
                 partial_event.append(e)
                 continue
