@@ -871,7 +871,7 @@ def merge_sv_labels(vis_entry, min_distance):
                 c_min_distance = dist
                 conflict_pos = pos
         r_conflict_pos_idx = -1
-        for sv_label_itr_idx, sv_label_itr in enumerate(vis_entry['sv_labels']):
+        for sv_label_itr_idx, sv_label_itr in enumerate(new_sv_labels):
             if sv_label_itr['pos'] == conflict_pos:
                 r_conflict_pos_idx = sv_label_itr_idx
                 break

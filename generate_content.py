@@ -586,7 +586,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
 
 def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_filepath, index_to_segment_dict):
     smap_df = smap_to_df(smap_filepath)
-    cnv_df = cnv_to_df(cnv_filepath)
+    # cnv_df = cnv_to_df(cnv_filepath)
     full_event = []
     partial_event = []
     for e in sorted_events:
