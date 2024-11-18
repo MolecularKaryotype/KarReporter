@@ -332,14 +332,14 @@
                                                 </p>
                                             {% endfor %}
                                             {% if debug %}
-                                                <p><div class="h5-font" style="font-weight: bold;">WT-haps</div></p>
+                                                <p><div class="h4-font" style="font-weight: bold;">WT-haps</div></p>
                                                 {% for wt_hap in debug_info.wt_haps %}
                                                     <p class="h5-font" style="padding-left: 1.5rem;">
                                                         {{ debug_info.IDs[loop.index - 1] }}:  {{ wt_hap }}
                                                     </p>
                                                 {% endfor %}
                                                 <p><div class="h4-font" style="font-weight: bold;">Alignments</div></p>
-                                                {% for wt_hap in debug_info.wt_haps %}
+                                                {% for mt_aligned in debug_info.mt_aligned %}
                                                     <p class="h5-font" style="padding-left: 1.5rem;">
                                                         {{ mt_aligned }} {{ debug_info.wt_aligned[loop.index - 1] }}
                                                     </p>
