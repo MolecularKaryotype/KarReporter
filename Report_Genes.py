@@ -29,26 +29,15 @@ def get_DDG_overlapped_genes(input_gene_list, DDG_file=get_metadata_file_path('D
     return overlapped_gene_df
 
 
-def tostring_gene_disease_omim(filtered_DDG_df):
+def format_gene_disease_omim(filtered_DDG_df):
+    """
+    :param filtered_DDG_df:
+    :return: zipped gene, disease, allelic requirement, mutation consequence, confidence
+    """
     # for the same gene (under same gene OMIM), we can have multiple diseases (different disease OMIM)
-    gene_list = []  # [(str, int)]; (gene, OMIM)
-    disease_list = []  # [[(str, int)]]; [(disease name, corresponding OMIM)]
-
-    genes = filtered_DDG_df['gene symbol'].unique()
-    for gene in genes:
-        gene_df = filtered_DDG_df[filtered_DDG_df['gene symbol'] == gene]
-        diseases = []
-        first_row = True
-        for index, row in gene_df.iterrows():
-            if first_row:
-                gene_list.append((gene, row['gene mim']))
-                first_row = False
-            disease_name = row['disease name'].replace('&', '\&')  # prevent latex errors
-            disease_mim = row['disease mim']
-            diseases.append((disease_name, disease_mim))
-        disease_list.append(diseases)
-
-    return gene_list, disease_list
+    col_of_interest = ['gene symbol', 'gene mim', 'disease name', 'allelic requirement', 'mutation consequence', 'confidence category', 'organ specificity list']
+    vals = [{col: row[col] for col in col_of_interest} for _, row in filtered_DDG_df.iterrows()]
+    return vals
 
 
 def test_if_DDG_has_duplicate():
@@ -98,8 +87,8 @@ def report_on_genes_based_on_breakpoints(breakpoints):
     breakpoints = gather_breakpoints(breakpoints)
     genes_near_bp = get_genes_near_breakpoints(breakpoints)
     DDG_df = get_DDG_overlapped_genes(genes_near_bp)
-    DDG_gene_list, DDG_disease_list = tostring_gene_disease_omim(DDG_df)
-    return genes_near_bp, list(zip(DDG_gene_list, DDG_disease_list))
+    formated_DDG_genes = format_gene_disease_omim(DDG_df)
+    return genes_near_bp, formated_DDG_genes
 
 
 def report_cnv_genes_on_region(chrom, start, end, proximity=50000):
@@ -111,15 +100,15 @@ def report_cnv_genes_on_region(chrom, start, end, proximity=50000):
     end = end + proximity
     genes = get_genes_in_region('chr' + chrom, start, end)
     DDG_df = get_DDG_overlapped_genes(genes)
-    DDG_gene_list, DDG_disease_list = tostring_gene_disease_omim(DDG_df)
-    return genes, list(zip(DDG_gene_list, DDG_disease_list))
+    formated_DDG_genes = format_gene_disease_omim(DDG_df)
+    return genes, formated_DDG_genes
 
 
 def test_get_genes():
     genes = get_genes_in_region('Chr22', 25200725, 25560371)
     print(genes)
     df = get_DDG_overlapped_genes(genes)
-    a, b = tostring_gene_disease_omim(df)
+    a, b = format_gene_disease_omim(df)
     for idx, a_itr in enumerate(a):
         print(a_itr, b[idx])
 

@@ -181,8 +181,7 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
     # genes report
     formatted_genes_reports_full = [format_genes_report(genes_report) for genes_report in genes_reports_full]
     formatted_genes_reports_partial = [format_genes_report(genes_report) for genes_report in genes_reports_partial]
-    columns_order = ['SV', 'gene name', 'gene omim', 'rationale']
-
+    columns_order = ['SV', 'gene', 'rationale', 'allelic req.', 'mutatation req.', 'confidence', 'organ']
     start = 0
     index = 0
     reporttemplate = env1.get_template('report.html')

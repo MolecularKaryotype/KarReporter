@@ -215,13 +215,13 @@
                                     <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingThree">
                                         <div class="accordion-body" style="padding: 0.75rem">
                                             {% if iscn_full %}
-                                                <div class="h4-font" style="font-weight: bold; margin-bottom:0; padding-left: 0.75rem">SVs</div>
-                                                <ul class="list-group" style="padding-left: 1.9rem; padding-right: 0.75rem; padding-top: 0.75rem">
+                                                <div class="h4-font" style="font-weight: bold; padding-left: 0.75rem;">SVs</div>
+                                                <ul class="list-group" style="padding-left: 1.9rem; padding-right: 0.75rem; padding-top: 0.75rem; padding-bottom:0.35rem;">
                                                     {% for sv in iscn_full %}
                                                     <li class="list-group-item" style="border: none; padding:0; text-align:left ;">
-                                                        <p style="margin-bottom: 0;"><div class="h5-font"><strong>
+                                                        <div class="h5-font" style="margin-bottom: 0; padding-bottom: 0.4rem"><strong>
                                                             {{ loop.index }}. {{ sv[0] }}</strong>: {{ sv[1] }}
-                                                        </div></p>
+                                                        </div>
                                                     </li>
                                                     {% endfor %}
                                                 </ul>
@@ -270,14 +270,14 @@
                                     <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingFour">
                                         <div class="accordion-body" style="padding: 0.75rem">
                                             {% if iscn_partial %}
-                                                <div class="h4-font" style="font-weight: bold; margin-bottom:0; padding-left: 0.75rem">SVs</div>
-                                                <ul class="list-group" style="padding-left: 1.9rem; padding-right: 0.75rem; padding-top: 0.75rem">
+                                                <div class="h4-font" style="font-weight: bold; padding-left:0.75rem;">SVs</div>
+                                                <ul class="list-group" style="padding-left: 1.9rem; padding-right: 0.75rem; padding-top: 0.75rem; padding-bottom:0.35rem;">
                                                     {% for sv in iscn_partial %}
                                                         {% set padded_index = iscn_full | length + loop.index %}
                                                         <li class="list-group-item" style="border: none; padding:0; text-align:left ;">
-                                                            <p style="margin-bottom: 0;"><div class="h5-font"><strong>
+                                                            <div class="h5-font" style="margin-bottom: 0; padding-bottom:0.4rem;"><strong>
                                                                 {{ padded_index }}. {{ sv[0] }}</strong>: {{ sv[1] }}
-                                                            </div></p>
+                                                            </div>
                                                         </li>
                                                     {% endfor %}
                                                 </ul>
