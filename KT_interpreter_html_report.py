@@ -158,7 +158,26 @@ def generate_html_report(compile_image, cases_of_interest, title, data_dir, imag
         os.makedirs(output_dir,exist_ok=True)
     if os.path.exists(output_dir+"/static"):
         shutil.rmtree(output_dir+"/static")
-    shutil.copytree(f"{kr_dir}/bootstrap/static", output_dir+"/static", dirs_exist_ok=True)
+
+    ## replaced the dirs_exist_ok=True; which does not exist before py3.8
+    source = f"{kr_dir}/bootstrap/static"
+    destination = output_dir + "/static"
+    # Check if destination exists
+    if os.path.exists(destination):
+        # Copy the contents of the source directory into the destination
+        for item in os.listdir(source):
+            src_path = os.path.join(source, item)
+            dst_path = os.path.join(destination, item)
+
+            if os.path.isdir(src_path):
+                # Copy directory recursively
+                shutil.copytree(src_path, dst_path)
+            else:
+                # Copy individual files
+                shutil.copy2(src_path, dst_path)
+    else:
+        # If the destination doesn't exist, use copytree as usual
+        shutil.copytree(source, destination)
 
     with open(output_dir+"/"+"report_summary.html", 'w') as f:
         f.write(newrendered_html)
