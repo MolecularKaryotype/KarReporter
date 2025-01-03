@@ -178,7 +178,7 @@ def format_report(interpreted_events_full, interpreted_events_partial, aligned_h
                 o_event = interpreted_events[co_event_idx]
                 if int(o_event[1].split('<')[1].split('>')[0]) != event_id:
                     print('more than 2-break reciprocal translocation detected')
-                    raise RuntimeError('more than 2-breaks detected')
+                    # raise RuntimeError('more than 2-breaks detected')
                 # get breakpoints and determine the swaps by number of qter/pter
                 c_event_info = event[2]
                 o_event_info = o_event[2]
@@ -355,6 +355,15 @@ def chr_range_tostr(bpa, bpb, bpa_band, bpb_band):
     return "{}-{} ({} - {})".format(format(bpa, ',d'), format(bpb, ',d'), bpa_band, bpb_band)
 
 
+def get_segment_multiplicity(mt_list):
+    mult_dict = defaultdict(int)
+    for mt in mt_list:
+        segs = [int(x[:-1]) for x in mt]
+        for seg in segs:
+            mult_dict[seg] += 1
+    return mult_dict
+
+
 def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_dir, file_of_interest=None, compile_image=False, debug=False, skip=None, forbidden_region_file=get_metadata_file_path('acrocentric_telo_cen.bed')):
     def vis_key(input_vis):
         chr_val = input_vis['chr'][3:]
@@ -386,6 +395,8 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
     iscn_reports_partial, genes_reports_partial, case_event_type_reports_partial, DDG2P_interruptions_partial, DDG2P_CNV_partial, case_complexities_partial = [], [], [], [], [], []
 
     for folder in folders:
+        if folder == '.DS_Store':
+            continue
         file = f"{folder}/{folder}.txt"
         bed_filepath = f"{omkar_output_dir}/{folder}/{folder}_SV.bed"
 
@@ -437,7 +448,8 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
         # summary view image
         events = sort_events(events)
         # this is a stable separation, keeping the sorted order
-        c_events_full, c_events_partial = separate_full_vs_partial_called_events(events, smap_filepath, cnv_filepath, index_to_segment_dict)
+        segment_multiplicity = get_segment_multiplicity(mt_indexed_lists)
+        c_events_full, c_events_partial = separate_full_vs_partial_called_events(events, smap_filepath, cnv_filepath, index_to_segment_dict, segment_multiplicity, debug=True)
         summary_image_prefix = "{}/../full_karyotype_images/{}_cytoband_summary".format(image_dir, filename)
         image_path = summary_image_prefix + "_merged_rotated.png"
         preview_image_path = summary_image_prefix + "_merged_rotated_preview.png"
@@ -485,7 +497,7 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
             ## generate report text
             c_events = sort_events(c_events)
             # this is a stable separation, keeping the sorted order
-            c_events_full, c_events_partial = separate_full_vs_partial_called_events(c_events, smap_filepath, cnv_filepath, index_to_segment_dict)
+            c_events_full, c_events_partial = separate_full_vs_partial_called_events(c_events, smap_filepath, cnv_filepath, index_to_segment_dict, segment_multiplicity)
             iscn_events_full, iscn_events_partial, genes_report_full, genes_report_partial, cluster_event_type_reports_full, cluster_event_type_reports_partial = format_report(c_events_full, c_events_partial, aligned_haplotypes, index_to_segment_dict, debug=debug)
 
             ## generate images
@@ -584,11 +596,72 @@ def batch_populate_html_contents(omkar_output_dir, image_dir, omkar_input_data_d
             debug_outputs)
 
 
-def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_filepath, index_to_segment_dict):
+def contains_seg_with_cnv(segs, index_to_segment_dict, segment_multiplicity, df, cnv_type, cnv_threshold=0.2, size_threshold=5000):
+    """
+    given a list of segments (with orientation), and a dict of full genome multiplicity, determine if exists a seg with cnv deviation from expected_cn
+    :param size_threshold:
+    :param cnv_threshold:
+    :param cnv_type: in ['gain', 'loss']
+    :param df:
+    :param index_to_segment_dict:
+    :param segs:
+    :param segment_multiplicity:
+    :return:
+    """
+    stripped_segs = [int(s[:-1]) for s in segs]
+    cnv_size = 0
+    for seg in stripped_segs:
+        seg_obj = index_to_segment_dict[seg]
+        chrom = convert_chrom(seg_obj.chr_name.replace('Chr', ''))
+        avg_cn, expected_cn = region_reported_cn(df, chrom, seg_obj.start, seg_obj.end)
+        if expected_cn == segment_multiplicity[seg]:
+            # complementary event elsewhere
+            continue
+        if cnv_type == 'gain' and avg_cn - expected_cn < cnv_threshold:
+            cnv_size += len(seg_obj)
+        elif cnv_type == 'loss' and expected_cn - avg_cn < cnv_threshold:
+            cnv_size += len(seg_obj)
+    return True if cnv_size >= size_threshold else False
+
+def get_sv_edge(sv_type, index_to_segment_dict, indel_segs):
+    """
+    :param sv_type: currently supported types in ['tandem duplication', 'left/right duplication inversion', 'deletion']
+    :param index_to_segment_dict:
+    :param indel_segs:
+    :return:
+    """
+    segs = [int(s[:-1]) for s in indel_segs]
+    if sv_type == 'deletion':
+        chrom = index_to_segment_dict[segs[0]].chr_name
+        p1 = index_to_segment_dict[segs[0]].start
+        p2 = index_to_segment_dict[segs[-1]].end
+        return [(sv_type, chrom, p1, chrom, p2)]
+    elif sv_type == 'tandem_duplication':
+        chrom = index_to_segment_dict[segs[0]].chr_name
+        p1 = index_to_segment_dict[segs[0]].start
+        p2 = index_to_segment_dict[segs[-1]].end
+        return [(sv_type, chrom, p2, chrom, p1)]
+    elif sv_type == 'left_duplication_inversion':
+        chrom = index_to_segment_dict[segs[0]].chr_name
+        p1 = index_to_segment_dict[segs[-1]].start
+        p2 = index_to_segment_dict[segs[0]].end
+        return [(sv_type, chrom, p1, chrom, p2), (sv_type, chrom, p1, chrom, p1)]
+    elif sv_type == 'right_duplication_inversion':
+        chrom = index_to_segment_dict[segs[0]].chr_name
+        p1 = index_to_segment_dict[segs[-1]].start
+        p2 = index_to_segment_dict[segs[0]].end
+        return [(sv_type, chrom, p1, chrom, p2), (sv_type, chrom, p1, chrom, p1)]
+
+
+def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_filepath, index_to_segment_dict, segment_multiplicity, debug=False):
     smap_df = smap_to_df(smap_filepath)
-    # cnv_df = cnv_to_df(cnv_filepath)
+    cnv_df = cnv_to_df(cnv_filepath)
     full_event = []
     partial_event = []
+    sv_missed_event = []  # for stats collection
+    cnv_missed_event = []  # for stats collection
+    sv_missed_svedge = []
+    cnv_missed_svedge = []
     for e in sorted_events:
         if e[1] == 'deletion':
             deleted_segments = e[2][0].split('.')[2].replace('wt(', '').replace(')', '').split(',')
@@ -597,9 +670,21 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             left_boundary = index_to_segment_dict[left_segment].start
             right_boundary = index_to_segment_dict[right_segment].end
             chrom = convert_chrom(index_to_segment_dict[left_segment].chr_name.replace('Chr', ''))
+            # SV-missed
             smap_status = edge_in_smap(smap_df, chrom, chrom, left_boundary, right_boundary, [], 0.0, 50000)
             if not smap_status:
                 partial_event.append(e)
+                sv_missed_event.append(e)
+                sv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, deleted_segments))
+                continue
+            # CNV-missed
+            # debug use
+            avg_cn, expected_cn = region_reported_cn(cnv_df, chrom, left_boundary, right_boundary)
+            print(f"1223debug: {e}, {expected_cn}, {avg_cn}, {chrom}, {abs(right_boundary - left_boundary)}")
+            if contains_seg_with_cnv(deleted_segments, index_to_segment_dict, segment_multiplicity, cnv_df, 'loss'):
+                partial_event.append(e)
+                cnv_missed_event.append(e)
+                cnv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, deleted_segments))
                 continue
         elif e[1] == 'tandem_duplication':
             duplicated_segments = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')
@@ -608,15 +693,27 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             left_boundary = index_to_segment_dict[left_segment].start
             right_boundary = index_to_segment_dict[right_segment].end
             chrom = convert_chrom(index_to_segment_dict[left_segment].chr_name.replace('Chr', ''))
+            # SV-missed
             smap_status = edge_in_smap(smap_df, chrom, chrom, left_boundary, right_boundary, [], 0.0, 50000)
             if not smap_status:
                 partial_event.append(e)
+                sv_missed_event.append(e)
+                sv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, duplicated_segments))
+                continue
+            # CNV-missed
+            avg_cn, expected_cn = region_reported_cn(cnv_df, chrom, left_boundary, right_boundary)
+            print(f"1223debug: {e}, {expected_cn}, {avg_cn}")
+            if contains_seg_with_cnv(duplicated_segments, index_to_segment_dict, segment_multiplicity, cnv_df, 'gain'):
+                partial_event.append(e)
+                cnv_missed_event.append(e)
+                cnv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, duplicated_segments))
                 continue
         elif e[1] == 'insertion':
             seg1 = e[2][0].split('.')[3]
             seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
             seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
             seg4 = e[2][0].split('.')[4]
+            duplicated_segments = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')
             if seg1 == 'p-ter':
                 bp1 = -99
                 chrom1 = -1
@@ -633,18 +730,39 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             else:
                 bp4 = index_to_segment_dict[int(seg4[:-1])].start if seg4[-1] == '+' else index_to_segment_dict[int(seg4[:-1])].end
                 chrom4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
-
+            # SV-missed
             # if terminal, we will require one fewer edge
             smap_status12 = edge_in_smap(smap_df, chrom1, chrom2, bp1, bp2, [], 0.0, 50000) if bp1 != -99 else True
             smap_status34 = edge_in_smap(smap_df, chrom3, chrom4, bp3, bp4, [], 0.0, 50000) if bp4 != -99 else True
             if (not smap_status12) or (not smap_status34):
                 partial_event.append(e)
+                sv_missed_event.append(e)
+                svedge = []
+                if chrom1 != -1:
+                    svedge.append(('insertion', inverse_convert_chrom(chrom1), bp1, inverse_convert_chrom(chrom2), bp2))
+                if chrom4 != -1:
+                    svedge.append(('insertion', inverse_convert_chrom(chrom3), bp3, inverse_convert_chrom(chrom4), bp4))
+                sv_missed_svedge.append(svedge)
+                continue
+            # CNV-missed
+            avg_cn, expected_cn = region_reported_cn(cnv_df, chrom2, bp2, bp3)
+            print(f"1223debug: {e}, {expected_cn}, {avg_cn}")
+            if contains_seg_with_cnv(duplicated_segments, index_to_segment_dict, segment_multiplicity, cnv_df, 'gain'):
+                partial_event.append(e)
+                cnv_missed_event.append(e)
+                svedge = []
+                if chrom1 != -1:
+                    svedge.append(('insertion', inverse_convert_chrom(chrom1), bp1, inverse_convert_chrom(chrom2), bp2))
+                if chrom4 != -1:
+                    svedge.append(('insertion', inverse_convert_chrom(chrom3), bp3, inverse_convert_chrom(chrom4), bp4))
+                cnv_missed_svedge.append(svedge)
                 continue
         elif e[1] == 'left_duplication_inversion':
             seg1 = e[2][0].split('.')[3]
             seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
             seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
             seg4 = e[2][0].split('.')[4]
+            duplicated_segments = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')
             if seg1 == 'p-ter':
                 bp1 = -99
             else:
@@ -653,16 +771,25 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
             bp4 = bp3  # self-edge
             chrom = convert_chrom(index_to_segment_dict[int(seg2[:-1])].chr_name.replace('Chr', ''))  # should be strcitly intra-chr
+            # SV-missed
             smap_status12 = edge_in_smap(smap_df, chrom, chrom, bp1, bp2, [], 0.0, 50000) if bp1 != -99 else True
             smap_status34 = edge_in_smap(smap_df, chrom, chrom, bp3, bp4, [], 0.0, 50000)
             if (not smap_status12) or (not smap_status34):
                 partial_event.append(e)
+                sv_missed_event.append(e)
+                sv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, duplicated_segments))
+                continue
+            if contains_seg_with_cnv(duplicated_segments, index_to_segment_dict, segment_multiplicity, cnv_df, 'gain'):
+                partial_event.append(e)
+                cnv_missed_event.append(e)
+                cnv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, duplicated_segments))
                 continue
         elif e[1] == 'right_duplication_inversion':
             seg1 = e[2][0].split('.')[3]
             seg2 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[0]
             seg3 = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')[-1]
             seg4 = e[2][0].split('.')[4]
+            duplicated_segments = e[2][0].split('.')[2].replace('mt(', '').replace(')', '').split(',')
             bp1 = index_to_segment_dict[int(seg1[:-1])].end if seg1[-1] == '+' else index_to_segment_dict[int(seg1[:-1])].start
             bp2 = bp1  # self-edge
             bp3 = index_to_segment_dict[int(seg3[:-1])].end if seg3[-1] == '+' else index_to_segment_dict[int(seg3[:-1])].start
@@ -671,12 +798,33 @@ def separate_full_vs_partial_called_events(sorted_events, smap_filepath, cnv_fil
             else:
                 bp4 = convert_chrom(index_to_segment_dict[int(seg4[:-1])].chr_name.replace('Chr', ''))
             chrom = convert_chrom(index_to_segment_dict[int(seg2[:-1])].chr_name.replace('Chr', ''))  # should be strictly intra-chr
+            # SV-missed
             smap_status12 = edge_in_smap(smap_df, chrom, chrom, bp1, bp2, [], 0.0, 50000)
             smap_status34 = edge_in_smap(smap_df, chrom, chrom, bp3, bp4, [], 0.0, 50000) if bp4 != -99 else True
             if (not smap_status12) or (not smap_status34):
                 partial_event.append(e)
+                sv_missed_event.append(e)
+                sv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, duplicated_segments))
+                continue
+            if contains_seg_with_cnv(duplicated_segments, index_to_segment_dict, segment_multiplicity, cnv_df, 'gain'):
+                partial_event.append(e)
+                cnv_missed_event.append(e)
+                cnv_missed_svedge.append(get_sv_edge(e[1], index_to_segment_dict, duplicated_segments))
                 continue
         full_event.append(e)
+    if debug:
+        print('1221 test')
+        if full_event:
+            out_dict = {'count': len(full_event), 'events': full_event}
+            print(f"full_event: {out_dict}")
+        if sv_missed_event:
+            out_dict = {'count': len(sv_missed_event), 'events': sv_missed_event}
+            print(f"sv_missed_event: {out_dict}")
+            print(f"sv_missed_svedge: {sv_missed_svedge}")
+        if cnv_missed_event:
+            out_dict = {'count': len(cnv_missed_event), 'events': cnv_missed_event}
+            print(f"cnv_missed_event: {out_dict}")
+            print(f"cnv_missed_svedge: {cnv_missed_svedge}")
     return full_event, partial_event
 
 
