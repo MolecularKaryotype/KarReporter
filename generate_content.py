@@ -149,7 +149,7 @@ def format_report(interpreted_events_full, interpreted_events_partial, aligned_h
                         # TODO: check ISCN syntax if bp2_band == bp3_band
                         main_str = 'ins({})({}{}{})'.format(path_chr, bp1_band, bp2_band, bp3_band)
                     else:
-                        main_str = 'ins({};{})({};{}{})'.format(path_chr, bp2_chr, bp1_band, bp2_band, bp3_band)
+                        main_str = 'ins({};{})({};{}{})'.format(path_chr, bp2_chr[3:], bp1_band, bp2_band, bp3_band)
                     chr_range = chr_range_tostr(bp2, bp3, bp2_band, bp3_band)
                     if bp1 is None:
                         bp1_text = bp1_band  # TODO: use 0/len(Chr) for pter/qter
@@ -301,8 +301,8 @@ def format_report(interpreted_events_full, interpreted_events_partial, aligned_h
                     ins_site_left_band = get_band_location('chr' + ins_chr, ins_site_left_bp)
                 main_str = 'ins-t({};{})({};{}{})'.format(ins_chr, event_seg_chr, ins_site_left_band, event_seg_left_band, event_seg_right_band)
                 chr_range = chr_range_tostr(event_seg_left_bp, event_seg_right_bp, event_seg_left_band, event_seg_right_band)
-                iscn_interpretation = 'balanced non-reciprocal translocation of Chr{}: {} into Chr{}: {}({})' \
-                    .format(event_seg_chr, chr_range, ins_chr, ins_site_left_bp, ins_site_left_band)
+                iscn_interpretation = 'balanced non-reciprocal translocation of Chr{}: {} into Chr{}: {} ({})' \
+                    .format(event_seg_chr, chr_range, ins_chr, f"{ins_site_left_bp:,}", ins_site_left_band)
                 bp_genes, bp_genes_highlight = report_on_genes_based_on_breakpoints([(event_seg_chr, event_seg_left_bp),
                                                                                      (event_seg_chr, event_seg_left_bp),
                                                                                      (ins_chr, ins_site_left_bp)])

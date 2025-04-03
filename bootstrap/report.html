@@ -387,7 +387,7 @@
                                     </div>
                                     <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse show" aria-labelledby="panelsStayOpen-headingTwo">
                                         <div class="accordion-body" style="padding: 0.75rem">
-                                            {% if bed_rows %}
+                                            {% if bed_row %}
                                             <div class="table-container" style="padding-left:0.75rem; padding-right:0.75rem; padding-bottom:0.75rem;">
                                                 <table id="bed" class="table table-bordered table-striped table-hover cell-border compact stripe bed" style="margin: 0;">
                                                     <thead>
@@ -398,7 +398,7 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        {% for row in bed_rows %}
+                                                        {% for row in bed_row %}
                                                         <tr class="h5-font">
                                                             {% for item in row %}
                                                                 <td class="dt-body-right">{{ item }}</td>
