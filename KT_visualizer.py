@@ -169,7 +169,10 @@ def plot_chromosome(ax, chromosome_data, y_offset, x_offset, len_scaling, only_s
         end = band['end']
         name = band['band']
         stain = band['stain']
-        color = reduced_saturation_mapping[stain]
+        if stain not in reduced_saturation_mapping:
+            color = '#45b6fa'
+        else:
+            color = reduced_saturation_mapping[stain]
         text_color = get_text_color(color)
         chrom_bands = patches.Rectangle((x_offset + start + CHR_HEADER_X_OFFSET, y_offset + CHR_BAND_Y_OFFSET), end - start, BAND_WIDTH,
                                         linewidth=1, edgecolor='black', facecolor=color, alpha=BAND_ALPHA, lw=BAND_RECT_LINEWIDTH)
